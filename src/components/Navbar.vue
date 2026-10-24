@@ -174,12 +174,12 @@ function handleLogout() {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 10px rgba(3, 105, 161, 0.35);
 }
 
 .icon-svg {
@@ -267,15 +267,15 @@ function handleLogout() {
 }
 
 .btn-admin {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
   color: white;
   border: none;
   font-weight: 700;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 2px 6px rgba(3, 105, 161, 0.3);
 }
 
 .btn-admin:hover {
-  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  background: linear-gradient(135deg, #075985 0%, #0c4a6e 100%);
   color: white;
 }
 

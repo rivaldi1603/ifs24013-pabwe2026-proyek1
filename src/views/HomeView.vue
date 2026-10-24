@@ -439,13 +439,14 @@ onMounted(async () => {
 }
 
 .stat-pill {
-  background: rgba(255, 255, 255, 0.12);
+  background-color: #0f172a;
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(6px);
   padding: 0.45rem 1rem;
   border-radius: var(--radius-full);
   font-size: 0.85rem;
-  color: #e0f2fe;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .stat-pill strong {

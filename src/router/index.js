@@ -88,6 +88,7 @@ router.beforeEach((to, from, next) => {
     try {
       user = JSON.parse(userStr);
     } catch (e) {
+      console.error('Failed to parse user session in router:', e);
       user = null;
     }
   }

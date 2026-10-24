@@ -158,6 +158,7 @@ async function handleSubmit() {
       errorMsg.value = res.message || 'Gagal mengirimkan ulasan.';
     }
   } catch (err) {
+    console.error('Submit review error:', err);
     errorMsg.value = 'Terjadi kesalahan jaringan.';
   } finally {
     submitting.value = false;

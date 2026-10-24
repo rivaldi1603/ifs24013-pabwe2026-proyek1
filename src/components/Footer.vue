@@ -88,7 +88,7 @@
 .brand-icon {
   width: 36px;
   height: 36px;
-  background: #0284c7;
+  background: #0369a1;
   color: white;
   border-radius: var(--radius-md);
   display: flex;
@@ -111,13 +111,13 @@
 
 .footer-badge {
   display: inline-block;
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
+  background: #064e3b;
+  color: #6ee7b7;
   font-size: 0.775rem;
   font-weight: 600;
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid #059669;
 }
 
 .footer-links-group h2,

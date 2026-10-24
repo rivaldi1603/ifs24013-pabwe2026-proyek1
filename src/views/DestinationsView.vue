@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api';
 import DestinationCard from '../components/DestinationCard.vue';
@@ -208,7 +208,9 @@ onMounted(async () => {
     ]);
     if (regRes.success) regencies.value = regRes.data;
     if (catRes.success) categories.value = catRes.data.filter(c => c.type === 'place');
-  } catch (e) {}
+  } catch (e) {
+    console.error('Failed to load destinations metadata:', e);
+  }
   fetchData();
 });
 </script>

@@ -35,14 +35,14 @@
     <!-- METRICS GRID -->
     <div class="metrics-grid fade-in">
       <div class="metric-card card" @click="currentTab = 'destinations'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #e0f2fe; color: #0284c7;">📍</div>
+        <div class="metric-icon-wrap" style="background: #e0f2fe; color: #0369a1;">📍</div>
         <div class="metric-data">
           <span class="metric-num">{{ destinations.length }}</span>
           <span class="metric-label">Destinasi Wisata</span>
         </div>
       </div>
       <div class="metric-card card" @click="currentTab = 'services'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #d1fae5; color: #059669;">🧶</div>
+        <div class="metric-icon-wrap" style="background: #d1fae5; color: #047857;">🧶</div>
         <div class="metric-data">
           <span class="metric-num">{{ services.length }}</span>
           <span class="metric-label">Jasa & Homestay</span>
@@ -70,14 +70,14 @@
         </div>
       </div>
       <div class="metric-card card" @click="currentTab = 'reviews'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #fee2e2; color: #dc2626;">💬</div>
+        <div class="metric-icon-wrap" style="background: #fee2e2; color: #b91c1c;">💬</div>
         <div class="metric-data">
           <span class="metric-num">{{ allReviews.length }}</span>
           <span class="metric-label">Ulasan Pengunjung</span>
         </div>
       </div>
       <div class="metric-card card" @click="currentTab = 'users'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #f3e8ff; color: #7c3aed;">👥</div>
+        <div class="metric-icon-wrap" style="background: #f3e8ff; color: #6d28d9;">👥</div>
         <div class="metric-data">
           <span class="metric-num">{{ usersList.length }}</span>
           <span class="metric-label">Pengguna Terdaftar</span>

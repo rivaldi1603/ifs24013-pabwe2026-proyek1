@@ -354,6 +354,7 @@ async function saveProfile() {
       editError.value = res.message || 'Gagal menyimpan perubahan profil.';
     }
   } catch (err) {
+    console.error('Save profile error:', err);
     editError.value = 'Terjadi kesalahan server saat memperbarui profil.';
   } finally {
     saving.value = false;
@@ -429,14 +430,14 @@ onMounted(() => {
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
   color: white;
   font-size: 2.5rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 15px rgba(4, 120, 87, 0.3);
 }
 
 .user-avatar-img {

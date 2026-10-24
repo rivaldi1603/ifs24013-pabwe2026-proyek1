@@ -162,7 +162,9 @@ onMounted(async () => {
   try {
     const rRes = await api.getRegencies();
     if (rRes.success) regencies.value = rRes.data;
-  } catch (e) {}
+  } catch (e) {
+    console.error('Failed to load regencies in services:', e);
+  }
   fetchServices();
 });
 </script>

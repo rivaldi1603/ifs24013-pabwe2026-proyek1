@@ -19,13 +19,13 @@
       <div v-if="!isRegister" class="demo-box">
         <span class="demo-title">Akun Uji Coba Cepat (Evaluasi):</span>
         <div class="demo-buttons">
-          <button type="button" @click="fillLogin('admin@jelajahtoba.id', 'admin123')" class="demo-btn" aria-label="Isi otomatis akun admin">
+          <button type="button" @click="fillLogin('admin@jelajahtoba.id', 'admin123')" class="demo-btn">
             👑 Admin
           </button>
-          <button type="button" @click="fillLogin('hutaraja@jelajahtoba.id', 'mitra123')" class="demo-btn" aria-label="Isi otomatis akun mitra Hutaraja">
+          <button type="button" @click="fillLogin('hutaraja@jelajahtoba.id', 'mitra123')" class="demo-btn">
             🧶 Mitra Hutaraja
           </button>
-          <button type="button" @click="fillLogin('budi.traveler@gmail.com', 'user123')" class="demo-btn" aria-label="Isi otomatis akun traveler">
+          <button type="button" @click="fillLogin('budi.traveler@gmail.com', 'user123')" class="demo-btn">
             👤 Traveler
           </button>
         </div>
@@ -72,7 +72,7 @@
             class="form-input"
             :placeholder="isRegister ? 'nama@email.com' : 'admin@jelajahtoba.id atau admin'"
             required
-            autocomplete="username"
+            :autocomplete="isRegister ? 'email' : 'username'"
           />
         </div>
 
@@ -106,9 +106,9 @@
           {{ errorMsg }}
         </div>
 
-        <div v-if="successMsg" class="alert-success" role="status">
+        <output v-if="successMsg" class="alert-success">
           {{ successMsg }}
-        </div>
+        </output>
 
         <button id="btn-submit" name="btn-submit" type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;" :disabled="loading">
           {{ loading ? 'Memproses...' : (isRegister ? 'Daftar Sekarang' : 'Masuk ke Akun') }}
@@ -179,21 +179,63 @@ function fillLogin(em, pw) {
   password.value = pw;
 }
 
+function validateRegisterForm() {
+  if (!name.value.trim()) {
+    return 'Nama lengkap wajib diisi.';
+  }
+  if (!isValidEmail(email.value.trim())) {
+    return 'Format email tidak valid.';
+  }
+  if (password.value.length < 6) {
+    return 'Kata sandi minimal 6 karakter.';
+  }
+  return null;
+}
+
+async function handleRegisterSubmit(redirectTo) {
+  const res = await api.register({
+    name: name.value,
+    email: email.value,
+    password: password.value,
+    phone: phone.value,
+    organization: organization.value
+  });
+
+  if (!res.success) {
+    errorMsg.value = res.message || 'Registrasi gagal.';
+    return;
+  }
+
+  setUser(res.user, res.token);
+  successMsg.value = 'Registrasi berhasil! Mengalihkan...';
+  setTimeout(() => {
+    router.push(redirectTo || '/profil');
+  }, 500);
+}
+
+async function handleLoginSubmit(redirectTo) {
+  const res = await api.login(email.value, password.value);
+  if (!res.success) {
+    errorMsg.value = res.message || 'Email atau password salah.';
+    return;
+  }
+
+  setUser(res.user, res.token);
+  successMsg.value = 'Login berhasil! Mengalihkan...';
+  const target = redirectTo || (res.user.role === 'admin' ? '/admin' : '/profil');
+  setTimeout(() => {
+    router.push(target);
+  }, 400);
+}
+
 async function handleSubmit() {
   errorMsg.value = '';
   successMsg.value = '';
 
   if (isRegister.value) {
-    if (!name.value.trim()) {
-      errorMsg.value = 'Nama lengkap wajib diisi.';
-      return;
-    }
-    if (!isValidEmail(email.value.trim())) {
-      errorMsg.value = 'Format email tidak valid.';
-      return;
-    }
-    if (password.value.length < 6) {
-      errorMsg.value = 'Kata sandi minimal 6 karakter.';
+    const validationError = validateRegisterForm();
+    if (validationError) {
+      errorMsg.value = validationError;
       return;
     }
   }
@@ -203,37 +245,12 @@ async function handleSubmit() {
 
   try {
     if (isRegister.value) {
-      const res = await api.register({
-        name: name.value,
-        email: email.value,
-        password: password.value,
-        phone: phone.value,
-        organization: organization.value
-      });
-
-      if (res.success) {
-        setUser(res.user, res.token);
-        successMsg.value = 'Registrasi berhasil! Mengalihkan...';
-        setTimeout(() => {
-          router.push(redirectTo || '/profil');
-        }, 500);
-      } else {
-        errorMsg.value = res.message || 'Registrasi gagal.';
-      }
+      await handleRegisterSubmit(redirectTo);
     } else {
-      const res = await api.login(email.value, password.value);
-      if (res.success) {
-        setUser(res.user, res.token);
-        successMsg.value = 'Login berhasil! Mengalihkan...';
-        const target = redirectTo || (res.user.role === 'admin' ? '/admin' : '/profil');
-        setTimeout(() => {
-          router.push(target);
-        }, 400);
-      } else {
-        errorMsg.value = res.message || 'Email atau password salah.';
-      }
+      await handleLoginSubmit(redirectTo);
     }
   } catch (err) {
+    console.error('Auth submit error:', err);
     errorMsg.value = 'Terjadi kesalahan server.';
   } finally {
     loading.value = false;
@@ -267,7 +284,7 @@ async function handleSubmit() {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -396,6 +413,7 @@ async function handleSubmit() {
 }
 
 .alert-success {
+  display: block;
   background: #dcfce7;
   color: #15803d;
   padding: 0.65rem 0.85rem;
