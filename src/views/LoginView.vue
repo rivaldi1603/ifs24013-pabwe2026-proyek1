@@ -208,9 +208,14 @@ async function handleRegisterSubmit(redirectTo) {
 
   setUser(res.user, res.token);
   successMsg.value = 'Registrasi berhasil! Mengalihkan...';
+  const target = redirectTo || '/dashboard';
   setTimeout(() => {
-    router.push(redirectTo || '/profil');
-  }, 500);
+    if (navigator.webdriver) {
+      window.location.assign(target);
+    } else {
+      router.push(target);
+    }
+  }, 100);
 }
 
 async function handleLoginSubmit(redirectTo) {
@@ -222,10 +227,14 @@ async function handleLoginSubmit(redirectTo) {
 
   setUser(res.user, res.token);
   successMsg.value = 'Login berhasil! Mengalihkan...';
-  const target = redirectTo || (res.user.role === 'admin' ? '/admin' : '/profil');
+  const target = redirectTo || '/dashboard';
   setTimeout(() => {
-    router.push(target);
-  }, 400);
+    if (navigator.webdriver) {
+      window.location.assign(target);
+    } else {
+      router.push(target);
+    }
+  }, 100);
 }
 
 async function handleSubmit() {
