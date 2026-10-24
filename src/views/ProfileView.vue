@@ -174,7 +174,7 @@
         <form @submit.prevent="saveProfile" class="edit-profile-form">
           <!-- AVATAR UPLOAD & PREVIEW -->
           <div class="form-group text-center">
-            <label class="form-label" style="display:block; margin-bottom: 0.75rem;">Foto Profil</label>
+            <span class="form-label" style="display:block; margin-bottom: 0.75rem;">Foto Profil</span>
             <div class="avatar-preview-box">
               <img v-if="editForm.avatar_url" :src="editForm.avatar_url" alt="Preview Foto" class="preview-avatar-img" />
               <div v-else class="preview-avatar-placeholder">
@@ -196,27 +196,28 @@
 
           <!-- NAMA LENGKAP -->
           <div class="form-group">
-            <label class="form-label">Nama Lengkap *</label>
-            <input v-model="editForm.name" type="text" class="form-input" placeholder="Nama Anda" required />
+            <label for="prof-name" class="form-label">Nama Lengkap *</label>
+            <input id="prof-name" v-model="editForm.name" type="text" class="form-input" placeholder="Nama Anda" required />
           </div>
 
           <!-- EMAIL (READONLY) -->
           <div class="form-group">
-            <label class="form-label">Alamat Email</label>
-            <input :value="user?.email" type="email" class="form-input disabled-input" disabled />
+            <label for="prof-email" class="form-label">Alamat Email</label>
+            <input id="prof-email" :value="user?.email" type="email" class="form-input disabled-input" disabled />
             <small class="field-hint">Alamat email digunakan untuk login dan tidak dapat diubah.</small>
           </div>
 
           <!-- NOMOR HP / WHATSAPP -->
           <div class="form-group">
-            <label class="form-label">Nomor Telepon / WhatsApp</label>
-            <input v-model="editForm.phone" type="text" class="form-input" placeholder="Contoh: 081234567890" />
+            <label for="prof-phone" class="form-label">Nomor Telepon / WhatsApp</label>
+            <input id="prof-phone" v-model="editForm.phone" type="text" class="form-input" placeholder="Contoh: 081234567890" />
           </div>
 
           <!-- BIO -->
           <div class="form-group">
-            <label class="form-label">Bio / Tentang Diri Anda</label>
+            <label for="prof-bio" class="form-label">Bio / Tentang Diri Anda</label>
             <textarea
+              id="prof-bio"
               v-model="editForm.bio"
               rows="3"
               class="form-textarea"

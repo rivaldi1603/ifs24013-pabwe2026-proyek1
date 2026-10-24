@@ -19,13 +19,14 @@
         <div class="hero-search-box glass-panel fade-in">
           <form @submit.prevent="executeSearch" class="search-form">
             <div class="search-field">
-              <label class="search-label">Cari Tempat atau Layanan</label>
+              <label for="home-search-query" class="search-label">Cari Tempat atau Layanan</label>
               <div class="input-with-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
                 <input
+                  id="home-search-query"
                   v-model="searchQuery"
                   type="text"
                   placeholder="Misal: Pantai Bulbul, Workshop Ulos, Paralayang..."
@@ -35,8 +36,8 @@
             </div>
 
             <div class="search-field">
-              <label class="search-label">Wilayah Kabupaten</label>
-              <select v-model="selectedRegency" class="search-select">
+              <label for="home-search-regency" class="search-label">Wilayah Kabupaten</label>
+              <select id="home-search-regency" v-model="selectedRegency" class="search-select">
                 <option value="">Semua Kabupaten (8 Wilayah)</option>
                 <option v-for="r in regencies" :key="r.id" :value="r.id">
                   {{ r.name }}
@@ -45,8 +46,8 @@
             </div>
 
             <div class="search-field">
-              <label class="search-label">Kategori</label>
-              <select v-model="selectedCategory" class="search-select">
+              <label for="home-search-category" class="search-label">Kategori</label>
+              <select id="home-search-category" v-model="selectedCategory" class="search-select">
                 <option value="">Semua Kategori</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">
                   {{ c.name }}

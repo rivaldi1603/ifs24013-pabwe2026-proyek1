@@ -495,40 +495,40 @@
         </div>
         <form @submit.prevent="saveDestination" class="modal-form-grid">
           <div class="form-group full-width">
-            <label class="form-label">Nama Tempat Wisata *</label>
-            <input v-model="destForm.name" type="text" class="form-input" required />
+            <label for="dest-name" class="form-label">Nama Tempat Wisata *</label>
+            <input id="dest-name" v-model="destForm.name" type="text" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Kategori *</label>
-            <select v-model="destForm.category_id" class="form-select" required>
+            <label for="dest-category" class="form-label">Kategori *</label>
+            <select id="dest-category" v-model="destForm.category_id" class="form-select" required>
               <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Kabupaten *</label>
-            <select v-model="destForm.regency_id" class="form-select" required>
+            <label for="dest-regency" class="form-label">Kabupaten *</label>
+            <select id="dest-regency" v-model="destForm.regency_id" class="form-select" required>
               <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Tarif Tiket Display</label>
-            <input v-model="destForm.price_display" type="text" placeholder="Rp 10.000 / Gratis" class="form-input" />
+            <label for="dest-price" class="form-label">Tarif Tiket Display</label>
+            <input id="dest-price" v-model="destForm.price_display" type="text" placeholder="Rp 10.000 / Gratis" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Jam Operasional</label>
-            <input v-model="destForm.operational_hours" type="text" placeholder="08.00 - 18.00 WIB" class="form-input" />
+            <label for="dest-hours" class="form-label">Jam Operasional</label>
+            <input id="dest-hours" v-model="destForm.operational_hours" type="text" placeholder="08.00 - 18.00 WIB" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Alamat Lengkap</label>
-            <input v-model="destForm.address" type="text" class="form-input" />
+            <label for="dest-address" class="form-label">Alamat Lengkap</label>
+            <input id="dest-address" v-model="destForm.address" type="text" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">URL Gambar</label>
-            <input v-model="destForm.image_url" type="text" placeholder="https://..." class="form-input" />
+            <label for="dest-image" class="form-label">URL Gambar</label>
+            <input id="dest-image" v-model="destForm.image_url" type="text" placeholder="https://..." class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Deskripsi Lengkap</label>
-            <textarea v-model="destForm.description" rows="3" class="form-textarea"></textarea>
+            <label for="dest-description" class="form-label">Deskripsi Lengkap</label>
+            <textarea id="dest-description" v-model="destForm.description" rows="3" class="form-textarea"></textarea>
           </div>
           <div class="modal-actions full-width">
             <button type="button" @click="destModalOpen = false" class="btn btn-secondary">Batal</button>
@@ -547,16 +547,16 @@
         </div>
         <form @submit.prevent="saveService" class="modal-form-grid">
           <div class="form-group full-width">
-            <label class="form-label">Nama Layanan *</label>
-            <input v-model="serviceForm.name" type="text" class="form-input" required />
+            <label for="srv-name" class="form-label">Nama Layanan *</label>
+            <input id="srv-name" v-model="serviceForm.name" type="text" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Penyedia / Warga *</label>
-            <input v-model="serviceForm.provider_name" type="text" class="form-input" required />
+            <label for="srv-provider" class="form-label">Penyedia / Warga *</label>
+            <input id="srv-provider" v-model="serviceForm.provider_name" type="text" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Jenis Layanan</label>
-            <select v-model="serviceForm.service_type" class="form-select">
+            <label for="srv-type" class="form-label">Jenis Layanan</label>
+            <select id="srv-type" v-model="serviceForm.service_type" class="form-select">
               <option value="cultural_experience">Workshop & Budaya</option>
               <option value="homestay">Homestay Warga</option>
               <option value="tour_guide">Pemandu Lokal</option>
@@ -565,26 +565,26 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Kabupaten *</label>
-            <select v-model="serviceForm.regency_id" class="form-select" required>
+            <label for="srv-regency" class="form-label">Kabupaten *</label>
+            <select id="srv-regency" v-model="serviceForm.regency_id" class="form-select" required>
               <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Nomor WhatsApp</label>
-            <input v-model="serviceForm.contact_wa" type="text" placeholder="6281234567890" class="form-input" />
+            <label for="srv-wa" class="form-label">Nomor WhatsApp</label>
+            <input id="srv-wa" v-model="serviceForm.contact_wa" type="text" placeholder="6281234567890" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Tarif Display</label>
-            <input v-model="serviceForm.price_display" type="text" placeholder="Rp 150.000" class="form-input" />
+            <label for="srv-price" class="form-label">Tarif Display</label>
+            <input id="srv-price" v-model="serviceForm.price_display" type="text" placeholder="Rp 150.000" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Satuan Tarif</label>
-            <input v-model="serviceForm.price_unit" type="text" placeholder="per malam / per orang" class="form-input" />
+            <label for="srv-unit" class="form-label">Satuan Tarif</label>
+            <input id="srv-unit" v-model="serviceForm.price_unit" type="text" placeholder="per malam / per orang" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Deskripsi Layanan</label>
-            <textarea v-model="serviceForm.description" rows="3" class="form-textarea"></textarea>
+            <label for="srv-desc" class="form-label">Deskripsi Layanan</label>
+            <textarea id="srv-desc" v-model="serviceForm.description" rows="3" class="form-textarea"></textarea>
           </div>
           <div class="modal-actions full-width">
             <button type="button" @click="serviceModalOpen = false" class="btn btn-secondary">Batal</button>
@@ -603,40 +603,40 @@
         </div>
         <form @submit.prevent="saveTransport" class="modal-form-grid">
           <div class="form-group full-width">
-            <label class="form-label">Nama Rute / Dermaga *</label>
-            <input v-model="transportForm.name" type="text" class="form-input" placeholder="Contoh: Dermaga Ajibata - Tomok (KMP Ihan Batak)" required />
+            <label for="trans-name" class="form-label">Nama Rute / Dermaga *</label>
+            <input id="trans-name" v-model="transportForm.name" type="text" class="form-input" placeholder="Contoh: Dermaga Ajibata - Tomok (KMP Ihan Batak)" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Jenis Transportasi</label>
-            <select v-model="transportForm.transport_type" class="form-select">
+            <label for="trans-type" class="form-label">Jenis Transportasi</label>
+            <select id="trans-type" v-model="transportForm.transport_type" class="form-select">
               <option value="ferry">Kapal Motor Penyeberangan (KMP Ferry)</option>
               <option value="traditional_boat">Kapal Kayu Tradisional</option>
               <option value="land_shuttle">Shuttle / Angkutan Darat</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Arah / Lintasan *</label>
-            <input v-model="transportForm.route_direction" type="text" placeholder="Contoh: Ajibata (Toba) ⇄ Tomok (Samosir)" class="form-input" required />
+            <label for="trans-direction" class="form-label">Arah / Lintasan *</label>
+            <input id="trans-direction" v-model="transportForm.route_direction" type="text" placeholder="Contoh: Ajibata (Toba) ⇄ Tomok (Samosir)" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Jadwal Keberangkatan</label>
-            <input v-model="transportForm.departure_hours" type="text" placeholder="Contoh: 07.30, 09.30, 11.30, 13.30, 15.30, 18.00 WIB" class="form-input" />
+            <label for="trans-departure" class="form-label">Jadwal Keberangkatan</label>
+            <input id="trans-departure" v-model="transportForm.departure_hours" type="text" placeholder="Contoh: 07.30, 09.30, 11.30, 13.30, 15.30, 18.00 WIB" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Tarif Display</label>
-            <input v-model="transportForm.price_display" type="text" placeholder="Rp 15.000 / orang (Kendaraan Rp 50.000)" class="form-input" />
+            <label for="trans-price" class="form-label">Tarif Display</label>
+            <input id="trans-price" v-model="transportForm.price_display" type="text" placeholder="Rp 15.000 / orang (Kendaraan Rp 50.000)" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Operator / Pengelola</label>
-            <input v-model="transportForm.operator" type="text" placeholder="PT ASDP Indonesia Ferry / Swasta" class="form-input" />
+            <label for="trans-operator" class="form-label">Operator / Pengelola</label>
+            <input id="trans-operator" v-model="transportForm.operator" type="text" placeholder="PT ASDP Indonesia Ferry / Swasta" class="form-input" />
           </div>
           <div class="form-group">
-            <label class="form-label">Kontak / Call Center</label>
-            <input v-model="transportForm.contact" type="text" placeholder="191 (ASDP) / 0812345678" class="form-input" />
+            <label for="trans-contact" class="form-label">Kontak / Call Center</label>
+            <input id="trans-contact" v-model="transportForm.contact" type="text" placeholder="191 (ASDP) / 0812345678" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Catatan / Deskripsi Rute</label>
-            <textarea v-model="transportForm.description" rows="2" class="form-textarea" placeholder="Waktu tempuh sekitar 45 menit, melayani kendaraan roda 2 dan roda 4."></textarea>
+            <label for="trans-desc" class="form-label">Catatan / Deskripsi Rute</label>
+            <textarea id="trans-desc" v-model="transportForm.description" rows="2" class="form-textarea" placeholder="Waktu tempuh sekitar 45 menit, melayani kendaraan roda 2 dan roda 4."></textarea>
           </div>
           <div class="modal-actions full-width">
             <button type="button" @click="transportModalOpen = false" class="btn btn-secondary">Batal</button>
@@ -655,27 +655,27 @@
         </div>
         <form @submit.prevent="saveCulinary" class="modal-form-grid">
           <div class="form-group full-width">
-            <label class="form-label">Nama Makanan / Minuman *</label>
-            <input v-model="culinaryForm.name" type="text" class="form-input" placeholder="Contoh: Ikan Mas Arsik" required />
+            <label for="cul-name" class="form-label">Nama Makanan / Minuman *</label>
+            <input id="cul-name" v-model="culinaryForm.name" type="text" class="form-input" placeholder="Contoh: Ikan Mas Arsik" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Status Kehalalan</label>
-            <select v-model="culinaryForm.halal_status" class="form-select">
+            <label for="cul-halal" class="form-label">Status Kehalalan</label>
+            <select id="cul-halal" v-model="culinaryForm.halal_status" class="form-select">
               <option value="Halal">Halal (Ikan / Sayur / Ayam / Kue)</option>
               <option value="Non-Halal">Non-Halal (Tradisional Khas)</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Asal Daerah / Wilayah</label>
-            <input v-model="culinaryForm.origin_region" type="text" placeholder="Contoh: Samosir / Balige" class="form-input" />
+            <label for="cul-origin" class="form-label">Asal Daerah / Wilayah</label>
+            <input id="cul-origin" v-model="culinaryForm.origin_region" type="text" placeholder="Contoh: Samosir / Balige" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">URL Foto Makanan</label>
-            <input v-model="culinaryForm.image_url" type="text" placeholder="https://..." class="form-input" />
+            <label for="cul-image" class="form-label">URL Foto Makanan</label>
+            <input id="cul-image" v-model="culinaryForm.image_url" type="text" placeholder="https://..." class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Deskripsi & Ciri Khas Bumbu</label>
-            <textarea v-model="culinaryForm.description" rows="3" class="form-textarea" placeholder="Bumbu andaliman yang beraroma jeruk tajam, menggunakan asam gelugur..."></textarea>
+            <label for="cul-desc" class="form-label">Deskripsi & Ciri Khas Bumbu</label>
+            <textarea id="cul-desc" v-model="culinaryForm.description" rows="3" class="form-textarea" placeholder="Bumbu andaliman yang beraroma jeruk tajam, menggunakan asam gelugur..."></textarea>
           </div>
           <div class="modal-actions full-width">
             <button type="button" @click="culinaryModalOpen = false" class="btn btn-secondary">Batal</button>
@@ -694,27 +694,27 @@
         </div>
         <form @submit.prevent="saveArticle" class="modal-form-grid">
           <div class="form-group full-width">
-            <label class="form-label">Judul Artikel / Cerita Budaya *</label>
-            <input v-model="articleForm.title" type="text" class="form-input" placeholder="Contoh: Legenda Terbentuknya Danau Toba dan Kearifan Tradisi Batak" required />
+            <label for="art-title" class="form-label">Judul Artikel / Cerita Budaya *</label>
+            <input id="art-title" v-model="articleForm.title" type="text" class="form-input" placeholder="Contoh: Legenda Terbentuknya Danau Toba dan Kearifan Tradisi Batak" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Wilayah Kabupaten Terkait</label>
-            <select v-model="articleForm.regency_id" class="form-select">
+            <label for="art-regency" class="form-label">Wilayah Kabupaten Terkait</label>
+            <select id="art-regency" v-model="articleForm.regency_id" class="form-select">
               <option :value="null">Kawasan Danau Toba Umum</option>
               <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Tanggal Publikasi</label>
-            <input v-model="articleForm.published_at" type="date" class="form-input" />
+            <label for="art-date" class="form-label">Tanggal Publikasi</label>
+            <input id="art-date" v-model="articleForm.published_at" type="date" class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Tautan Sumber Berita / Referensi Asli</label>
-            <input v-model="articleForm.source_url" type="text" placeholder="https://..." class="form-input" />
+            <label for="art-source" class="form-label">Tautan Sumber Berita / Referensi Asli</label>
+            <input id="art-source" v-model="articleForm.source_url" type="text" placeholder="https://..." class="form-input" />
           </div>
           <div class="form-group full-width">
-            <label class="form-label">Isi / Ringkasan Cerita</label>
-            <textarea v-model="articleForm.summary" rows="4" class="form-textarea" placeholder="Tuliskan cerita, makna filosofis, atau ulasan perjalanan..."></textarea>
+            <label for="art-summary" class="form-label">Isi / Ringkasan Cerita</label>
+            <textarea id="art-summary" v-model="articleForm.summary" rows="4" class="form-textarea" placeholder="Tuliskan cerita, makna filosofis, atau ulasan perjalanan..."></textarea>
           </div>
           <div class="modal-actions full-width">
             <button type="button" @click="articleModalOpen = false" class="btn btn-secondary">Batal</button>

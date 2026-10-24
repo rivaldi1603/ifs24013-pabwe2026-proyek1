@@ -29,7 +29,7 @@
       <form v-else @submit.prevent="handleSubmit" class="modal-form">
         <!-- Rating Stars Selection -->
         <div class="form-group">
-          <label class="form-label">Penilaian Bintang (1 - 5):</label>
+          <span class="form-label">Penilaian Bintang (1 - 5):</span>
           <div class="stars-selector">
             <button
               v-for="star in 5"
@@ -47,8 +47,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Nama Anda:</label>
+          <label for="review-author" class="form-label">Nama Anda:</label>
           <input
+            id="review-author"
             v-model="reviewerName"
             type="text"
             class="form-input"
@@ -59,8 +60,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Ulasan Pengalaman Anda:</label>
+          <label for="review-content" class="form-label">Ulasan Pengalaman Anda:</label>
           <textarea
+            id="review-content"
             v-model="reviewText"
             rows="4"
             class="form-textarea"
