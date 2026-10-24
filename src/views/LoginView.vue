@@ -210,11 +210,7 @@ async function handleRegisterSubmit(redirectTo) {
   successMsg.value = 'Registrasi berhasil! Mengalihkan...';
   const target = redirectTo || '/dashboard';
   setTimeout(() => {
-    if (navigator.webdriver) {
-      window.location.assign(target);
-    } else {
-      router.push(target);
-    }
+    router.push(target);
   }, 100);
 }
 
@@ -229,11 +225,7 @@ async function handleLoginSubmit(redirectTo) {
   successMsg.value = 'Login berhasil! Mengalihkan...';
   const target = redirectTo || '/dashboard';
   setTimeout(() => {
-    if (navigator.webdriver) {
-      window.location.assign(target);
-    } else {
-      router.push(target);
-    }
+    router.push(target);
   }, 100);
 }
 
