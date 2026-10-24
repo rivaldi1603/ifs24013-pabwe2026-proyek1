@@ -13,7 +13,22 @@ if (!fs.existsSync(indexPath)) {
   process.exit(1);
 }
 
-const html = fs.readFileSync(indexPath, 'utf8');
+let html = fs.readFileSync(indexPath, 'utf8');
+
+// Inline critical index CSS to eliminate render-blocking CSS network request completely
+const cssLinkRegex = /<link\s+rel="stylesheet"\s+crossorigin\s+href="(\/assets\/index-[^"]+\.css)">/i;
+const cssMatch = html.match(cssLinkRegex);
+
+if (cssMatch) {
+  const cssRelativePath = cssMatch[1].replace(/^\//, '');
+  const cssFilePath = path.join(distDir, cssRelativePath);
+  if (fs.existsSync(cssFilePath)) {
+    const cssContent = fs.readFileSync(cssFilePath, 'utf8');
+    html = html.replace(cssMatch[0], `<style>${cssContent}</style>`);
+    fs.writeFileSync(indexPath, html);
+    console.log(`Inlined critical CSS from ${cssRelativePath} into index.html (eliminated render-blocking request).`);
+  }
+}
 
 const routes = [
   'auth/login',

@@ -87,4 +87,25 @@ describe('auth.js composable unit tests', () => {
     window.dispatchEvent(new CustomEvent('jt:auth-change'));
     expect(currentUser.value).toBeNull();
   });
+
+  it('loads user from sessionStorage and syncs to localStorage when localStorage is empty', () => {
+    const mockUser = { id: 7, name: 'Session User', role: 'user' };
+    sessionStorage.setItem('jt_user', JSON.stringify(mockUser));
+    const { currentUser, loadUserFromStorage } = useAuth();
+    loadUserFromStorage();
+    expect(currentUser.value).toEqual(mockUser);
+    expect(localStorage.getItem('jt_user')).toBe(JSON.stringify(mockUser));
+  });
+
+  it('logoutUser clears both localStorage and sessionStorage credentials', () => {
+    const { currentUser, setUser, logoutUser } = useAuth();
+    setUser({ id: 5, name: 'Dual Storage' }, 'token-xyz');
+    expect(sessionStorage.getItem('jt_token')).toBe('token-xyz');
+    expect(sessionStorage.getItem('jt_user')).not.toBeNull();
+
+    logoutUser();
+    expect(currentUser.value).toBeNull();
+    expect(sessionStorage.getItem('jt_token')).toBeNull();
+    expect(sessionStorage.getItem('jt_user')).toBeNull();
+  });
 });
