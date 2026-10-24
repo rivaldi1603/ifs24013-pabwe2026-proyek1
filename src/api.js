@@ -1,4 +1,5 @@
-const BASE_URL = '/api';
+const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '/api';
+const BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 function getHeaders(includeAuth = false) {
   const headers = {
