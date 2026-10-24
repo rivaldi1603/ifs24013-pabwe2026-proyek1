@@ -910,7 +910,7 @@ onMounted(() => {
 
 .disabled-input {
   background: #f1f5f9;
-  color: #94a3b8;
+  color: #475569;
   cursor: not-allowed;
 }
 
@@ -924,7 +924,7 @@ onMounted(() => {
 .alert-error {
   background: #fee2e2;
   border: 1px solid #fca5a5;
-  color: #dc2626;
+  color: #b91c1c;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   font-size: 0.85rem;

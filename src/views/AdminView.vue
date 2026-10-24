@@ -1278,14 +1278,14 @@ onMounted(() => {
 
 .btn-edit:hover {
   background: #f0f9ff;
-  border-color: #0284c7;
-  color: #0284c7;
+  border-color: #0369a1;
+  color: #0369a1;
 }
 
 .btn-del:hover {
   background: #fee2e2;
-  border-color: #ef4444;
-  color: #dc2626;
+  border-color: #b91c1c;
+  color: #b91c1c;
 }
 
 /* MODALS */
