@@ -1,4 +1,4 @@
-const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '/api';
+const rawBaseUrl = import.meta.env?.VITE_API_BASE_URL || '/api';
 const BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 function getHeaders(includeAuth = false) {
@@ -25,9 +25,10 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: getHeaders(auth),
-      body: body !== undefined ? JSON.stringify(body) : undefined
+      body: body === undefined ? undefined : JSON.stringify(body)
     });
   } catch (err) {
+    console.error('Network request error:', err);
     return { success: false, message: 'Tidak dapat terhubung ke server. Periksa koneksi atau pastikan backend berjalan.' };
   }
 
@@ -35,6 +36,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
   try {
     data = await res.json();
   } catch (err) {
+    console.error('JSON parse error:', err);
     return { success: false, message: `Respons server tidak valid (HTTP ${res.status}).` };
   }
 
@@ -42,7 +44,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     // Token missing/expired/invalid: clear it and notify the app
     if (res.status === 401 || /token/i.test(data?.message || '')) {
       localStorage.removeItem('jt_token');
-      window.dispatchEvent(new CustomEvent('jt:unauthorized'));
+      globalThis.dispatchEvent(new CustomEvent('jt:unauthorized'));
     }
   }
 
@@ -83,7 +85,10 @@ export const api = {
   deleteService: (id) => request(`/services/${id}`, { method: 'DELETE', auth: true }),
 
   // Transport
-  getTransport: (type) => request(`/transport${type ? `?type=${encodeURIComponent(type)}` : ''}`),
+  getTransport: (type) => {
+    const query = type ? `?type=${encodeURIComponent(type)}` : '';
+    return request(`/transport${query}`);
+  },
   createTransport: (payload) => request('/transport', { method: 'POST', body: payload, auth: true }),
   updateTransport: (id, payload) => request(`/transport/${id}`, { method: 'PUT', body: payload, auth: true }),
   deleteTransport: (id) => request(`/transport/${id}`, { method: 'DELETE', auth: true }),
@@ -102,11 +107,11 @@ export const api = {
   deleteArticle: (id) => request(`/articles/${id}`, { method: 'DELETE', auth: true }),
 
   // Reviews
-  getReviews: (params = {}, maybeId) => {
+  getReviews: (params, maybeId) => {
     if (typeof params === 'string') {
       return request(`/reviews?${qs({ target_type: params, target_id: maybeId })}`);
     }
-    return request(`/reviews?${qs(params)}`);
+    return request(`/reviews?${qs(params || {})}`);
   },
   submitReview: (payload) => request('/reviews', { method: 'POST', body: payload, auth: true }),
   deleteReview: (id) => request(`/reviews/${id}`, { method: 'DELETE', auth: true })
