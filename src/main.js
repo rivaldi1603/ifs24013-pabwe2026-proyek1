@@ -6,7 +6,10 @@ import './index.css';
 
 const app = createApp(App);
 app.use(router);
-app.mount('#app');
+
+router.isReady().then(() => {
+  app.mount('#app');
+});
 
 if (typeof window !== 'undefined') {
   window.addEventListener('pageshow', (event) => {

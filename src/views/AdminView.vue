@@ -727,7 +727,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted } from 'vue';
+import { ref, shallowRef, computed, onMounted, watch } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../auth';
 
@@ -771,49 +771,74 @@ const transportForm = ref({ id: null, name: '', transport_type: 'ferry', route_d
 const culinaryForm = ref({ id: null, name: '', halal_status: 'Halal', origin_region: 'Danau Toba', description: '', image_url: '' });
 const articleForm = ref({ id: null, title: '', regency_id: null, published_at: new Date().toISOString().split('T')[0], source_url: '', summary: '' });
 
-async function loadAllData() {
+// 1. Initial data for default active tab (Destinations)
+async function loadInitialData() {
   try {
-    // 1. Prioritize active tab (Destinations) and select metadata to unblock main thread
     const [destRes, regRes, catRes] = await Promise.all([
       api.getDestinations({ limit: 50 }),
       api.getRegencies(),
       api.getCategories()
     ]);
-
     if (destRes.success) destinations.value = destRes.data || [];
     if (regRes.success) regencies.value = regRes.data || [];
     if (catRes.success) categories.value = catRes.data || [];
-
-    // 2. Defer loading secondary tabs using requestIdleCallback to eliminate long tasks
-    const deferTask = typeof window !== 'undefined' && window.requestIdleCallback
-      ? window.requestIdleCallback
-      : ((cb) => setTimeout(cb, 120));
-
-    deferTask(async () => {
-      try {
-        const [servRes, transRes, culinRes, artRes, revRes, userRes] = await Promise.all([
-          api.getServices({ limit: 50 }),
-          api.getTransport(),
-          api.getCulinary(),
-          api.getArticles(),
-          api.getReviews({ limit: 50 }),
-          api.getUsers()
-        ]);
-
-        if (servRes.success) services.value = servRes.data || [];
-        if (transRes.success) transportRoutes.value = transRes.data || [];
-        if (culinRes.success) culinaryItems.value = culinRes.data || [];
-        if (artRes.success) articles.value = artRes.data || [];
-        if (revRes.success) allReviews.value = revRes.data || [];
-        if (userRes.success) usersList.value = userRes.data || [];
-      } catch (err) {
-        console.error('Error loading deferred admin content:', err);
-      }
-    });
   } catch (err) {
-    console.error('Error loading admin content:', err);
+    console.error('Error loading initial admin data:', err);
   }
 }
+
+// Specific fetchers for on-demand loading and updates
+async function loadDestinations() {
+  const destRes = await api.getDestinations({ limit: 50 });
+  if (destRes.success) destinations.value = destRes.data || [];
+}
+
+async function loadServices() {
+  const res = await api.getServices({ limit: 50 });
+  if (res.success) services.value = res.data || [];
+}
+
+async function loadTransport() {
+  const res = await api.getTransport();
+  if (res.success) transportRoutes.value = res.data || [];
+}
+
+async function loadCulinary() {
+  const res = await api.getCulinary();
+  if (res.success) culinaryItems.value = res.data || [];
+}
+
+async function loadArticles() {
+  const res = await api.getArticles();
+  if (res.success) articles.value = res.data || [];
+}
+
+async function loadReviews() {
+  const res = await api.getReviews({ limit: 50 });
+  if (res.success) allReviews.value = res.data || [];
+}
+
+async function loadUsers() {
+  const res = await api.getUsers();
+  if (res.success) usersList.value = res.data || [];
+}
+
+// On-demand load data when tabs are clicked
+watch(currentTab, async (tab) => {
+  if (tab === 'services' && services.value.length === 0) {
+    await loadServices();
+  } else if (tab === 'transport' && transportRoutes.value.length === 0) {
+    await loadTransport();
+  } else if (tab === 'culinary' && culinaryItems.value.length === 0) {
+    await loadCulinary();
+  } else if (tab === 'articles' && articles.value.length === 0) {
+    await loadArticles();
+  } else if (tab === 'reviews' && allReviews.value.length === 0) {
+    await loadReviews();
+  } else if (tab === 'users' && usersList.value.length === 0) {
+    await loadUsers();
+  }
+});
 
 // Filtered lists
 const filteredDestinations = computed(() => {
@@ -876,14 +901,14 @@ async function saveDestination() {
   saving.value = true;
   try {
     const res = destForm.value.id ? await api.updateDestination(destForm.value.id, destForm.value) : await api.createDestination(destForm.value);
-    if (res.success) { destModalOpen.value = false; await loadAllData(); alert('Destinasi berhasil disimpan!'); }
+    if (res.success) { destModalOpen.value = false; await loadDestinations(); alert('Destinasi berhasil disimpan!'); }
     else alert(res.message || 'Gagal menyimpan.');
   } finally { saving.value = false; }
 }
 async function deleteDest(id, name) {
   if (!confirm(`Hapus destinasi "${name}"?`)) return;
   const res = await api.deleteDestination(id);
-  if (res.success) { await loadAllData(); alert('Destinasi berhasil dihapus.'); }
+  if (res.success) { await loadDestinations(); alert('Destinasi berhasil dihapus.'); }
 }
 
 // 2. Services
@@ -899,14 +924,14 @@ async function saveService() {
   saving.value = true;
   try {
     const res = serviceForm.value.id ? await api.updateService(serviceForm.value.id, serviceForm.value) : await api.createService(serviceForm.value);
-    if (res.success) { serviceModalOpen.value = false; await loadAllData(); alert('Layanan berhasil disimpan!'); }
+    if (res.success) { serviceModalOpen.value = false; await loadServices(); alert('Layanan berhasil disimpan!'); }
     else alert(res.message || 'Gagal menyimpan.');
   } finally { saving.value = false; }
 }
 async function deleteServ(id, name) {
   if (!confirm(`Hapus layanan "${name}"?`)) return;
   const res = await api.deleteService(id);
-  if (res.success) { await loadAllData(); alert('Layanan berhasil dihapus.'); }
+  if (res.success) { await loadServices(); alert('Layanan berhasil dihapus.'); }
 }
 
 // 3. Transport
@@ -922,14 +947,14 @@ async function saveTransport() {
   saving.value = true;
   try {
     const res = transportForm.value.id ? await api.updateTransport(transportForm.value.id, transportForm.value) : await api.createTransport(transportForm.value);
-    if (res.success) { transportModalOpen.value = false; await loadAllData(); alert('Rute transportasi berhasil disimpan!'); }
+    if (res.success) { transportModalOpen.value = false; await loadTransport(); alert('Rute transportasi berhasil disimpan!'); }
     else alert(res.message || 'Gagal menyimpan.');
   } finally { saving.value = false; }
 }
 async function deleteTrans(id, name) {
   if (!confirm(`Hapus rute "${name}"?`)) return;
   const res = await api.deleteTransport(id);
-  if (res.success) { await loadAllData(); alert('Rute transportasi berhasil dihapus.'); }
+  if (res.success) { await loadTransport(); alert('Rute transportasi berhasil dihapus.'); }
 }
 
 // 4. Culinary
@@ -945,14 +970,14 @@ async function saveCulinary() {
   saving.value = true;
   try {
     const res = culinaryForm.value.id ? await api.updateCulinary(culinaryForm.value.id, culinaryForm.value) : await api.createCulinary(culinaryForm.value);
-    if (res.success) { culinaryModalOpen.value = false; await loadAllData(); alert('Menu kuliner berhasil disimpan!'); }
+    if (res.success) { culinaryModalOpen.value = false; await loadCulinary(); alert('Menu kuliner berhasil disimpan!'); }
     else alert(res.message || 'Gagal menyimpan.');
   } finally { saving.value = false; }
 }
 async function deleteCulin(id, name) {
   if (!confirm(`Hapus menu kuliner "${name}"?`)) return;
   const res = await api.deleteCulinary(id);
-  if (res.success) { await loadAllData(); alert('Menu kuliner berhasil dihapus.'); }
+  if (res.success) { await loadCulinary(); alert('Menu kuliner berhasil dihapus.'); }
 }
 
 // 5. Articles
@@ -968,29 +993,25 @@ async function saveArticle() {
   saving.value = true;
   try {
     const res = articleForm.value.id ? await api.updateArticle(articleForm.value.id, articleForm.value) : await api.createArticle(articleForm.value);
-    if (res.success) { articleModalOpen.value = false; await loadAllData(); alert('Cerita Toba berhasil disimpan!'); }
+    if (res.success) { articleModalOpen.value = false; await loadArticles(); alert('Cerita Toba berhasil disimpan!'); }
     else alert(res.message || 'Gagal menyimpan.');
   } finally { saving.value = false; }
 }
 async function deleteArtic(id, title) {
   if (!confirm(`Hapus artikel "${title}"?`)) return;
   const res = await api.deleteArticle(id);
-  if (res.success) { await loadAllData(); alert('Artikel berhasil dihapus.'); }
+  if (res.success) { await loadArticles(); alert('Artikel berhasil dihapus.'); }
 }
 
 // 6. Reviews
 async function handleDeleteReview(id) {
   if (!confirm(`Hapus ulasan #${id}?`)) return;
   const res = await api.deleteReview(id);
-  if (res.success) { await loadAllData(); alert('Ulasan berhasil dihapus.'); }
+  if (res.success) { await loadReviews(); alert('Ulasan berhasil dihapus.'); }
 }
 
 onMounted(() => {
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      loadAllData();
-    }, 50);
-  });
+  loadInitialData();
 });
 </script>
 

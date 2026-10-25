@@ -4,7 +4,9 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
   plugins: [vue()],
   build: {
-    cssCodeSplit: false
+    modulePreload: {
+      polyfill: false
+    }
   },
   server: {
     port: 3000,
