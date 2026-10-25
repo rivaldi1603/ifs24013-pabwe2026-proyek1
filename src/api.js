@@ -30,7 +30,7 @@ function getHeaders(includeAuth = false) {
 
 const activeControllers = new Set();
 
-if (typeof globalThis.window !== 'undefined') {
+if (globalThis.window !== undefined) {
   globalThis.addEventListener('pagehide', () => {
     for (const controller of activeControllers) {
       controller.abort();

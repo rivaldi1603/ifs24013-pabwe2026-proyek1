@@ -11,7 +11,7 @@ router.isReady().then(() => {
   app.mount('#app');
 });
 
-if (typeof globalThis.window !== 'undefined') {
+if (globalThis.window !== undefined) {
   globalThis.addEventListener('pageshow', (event) => {
     if (event.persisted) {
       globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));

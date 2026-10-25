@@ -1,6 +1,6 @@
 <template>
   <div class="login-page container">
-    <div class="auth-card card fade-in">
+    <div class="auth-card card">
       <!-- HEADER -->
       <div class="auth-header">
         <div class="brand-icon">
@@ -369,8 +369,8 @@ async function handleSubmit() {
 }
 
 .auth-tab.active {
-  color: #075985;
-  border-bottom-color: #075985;
+  color: #034977;
+  border-bottom: 3px solid #034977;
 }
 
 .auth-notice {
@@ -392,7 +392,7 @@ async function handleSubmit() {
 }
 
 .auth-switch a {
-  color: #075985;
+  color: #034977;
   font-weight: 700;
   text-decoration: underline;
 }
