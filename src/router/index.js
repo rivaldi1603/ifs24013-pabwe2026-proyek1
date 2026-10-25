@@ -1,18 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
-const HomeView = () => import('../views/HomeView.vue');
-const LoginView = () => import('../views/LoginView.vue');
-
-
-const DestinationsView = () => import('../views/DestinationsView.vue');
-const DestinationDetailView = () => import('../views/DestinationDetailView.vue');
-const ServicesView = () => import('../views/ServicesView.vue');
-const ServiceDetailView = () => import('../views/ServiceDetailView.vue');
-const TransportView = () => import('../views/TransportView.vue');
-const CulinaryView = () => import('../views/CulinaryView.vue');
-const ArticlesView = () => import('../views/ArticlesView.vue');
-const DashboardView = () => import('../views/DashboardView.vue');
-const AdminView = () => import('../views/AdminView.vue');
-const ProfileView = () => import('../views/ProfileView.vue');
+import HomeView from '../views/HomeView.vue';
+import LoginView from '../views/LoginView.vue';
+import DestinationsView from '../views/DestinationsView.vue';
+import DestinationDetailView from '../views/DestinationDetailView.vue';
+import ServicesView from '../views/ServicesView.vue';
+import ServiceDetailView from '../views/ServiceDetailView.vue';
+import TransportView from '../views/TransportView.vue';
+import CulinaryView from '../views/CulinaryView.vue';
+import ArticlesView from '../views/ArticlesView.vue';
+import DashboardView from '../views/DashboardView.vue';
+import AdminView from '../views/AdminView.vue';
+import ProfileView from '../views/ProfileView.vue';
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },

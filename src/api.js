@@ -28,23 +28,43 @@ function getHeaders(includeAuth = false) {
   return headers;
 }
 
+const activeControllers = new Set();
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => {
+    for (const controller of activeControllers) {
+      controller.abort();
+    }
+    activeControllers.clear();
+  });
+}
+
 /**
  * Centralized fetch wrapper. Always resolves to an object shaped like
  * { success: boolean, message?: string, ... } and never throws, so callers
  * can safely check `res.success` even on network / non-JSON failures.
  */
 async function request(path, { method = 'GET', body, auth = false } = {}) {
+  const controller = new AbortController();
+  activeControllers.add(controller);
+
   let res;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: getHeaders(auth),
-      body: body === undefined ? undefined : JSON.stringify(body)
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller.signal
     });
   } catch (err) {
+    activeControllers.delete(controller);
+    if (err.name === 'AbortError') {
+      return { success: false, aborted: true };
+    }
     console.error('Network request error:', err);
     return { success: false, message: 'Tidak dapat terhubung ke server. Periksa koneksi atau pastikan backend berjalan.' };
   }
+  activeControllers.delete(controller);
 
   let data = null;
   try {

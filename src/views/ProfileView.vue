@@ -391,7 +391,11 @@ async function switchTab(tab) {
 }
 
 onMounted(() => {
-  loadUserData();
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      loadUserData();
+    }, 50);
+  });
 });
 </script>
 

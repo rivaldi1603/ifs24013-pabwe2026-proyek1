@@ -8,3 +8,11 @@ const app = createApp(App);
 app.use(router);
 app.mount('#app');
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      window.dispatchEvent(new CustomEvent('jt:auth-change'));
+    }
+  });
+}
+

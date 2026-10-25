@@ -16,7 +16,7 @@ if (!fs.existsSync(indexPath)) {
 let html = fs.readFileSync(indexPath, 'utf8');
 
 // Inline critical index CSS to eliminate render-blocking CSS network request completely
-const cssLinkRegex = /<link\s+rel="stylesheet"\s+crossorigin\s+href="(\/assets\/index-[^"]+\.css)">/i;
+const cssLinkRegex = /<link\s+rel="stylesheet"\s+crossorigin\s+href="(\/assets\/[^"]+\.css)">/i;
 const cssMatch = html.match(cssLinkRegex);
 
 if (cssMatch) {
@@ -52,16 +52,9 @@ const routes = [
 ];
 
 for (const route of routes) {
-  // Create .html file (e.g. dist/auth/login.html)
-  const htmlFilePath = path.join(distDir, `${route}.html`);
-  const htmlFileDir = path.dirname(htmlFilePath);
-  if (!fs.existsSync(htmlFileDir)) {
-    fs.mkdirSync(htmlFileDir, { recursive: true });
-  }
-  fs.writeFileSync(htmlFilePath, html);
-
-  // Create directory with index.html (e.g. dist/auth/login/index.html)
-  if (route !== '404') {
+  if (route === '404') {
+    fs.writeFileSync(path.join(distDir, '404.html'), html);
+  } else {
     const dirPath = path.join(distDir, route);
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });

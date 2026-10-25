@@ -986,7 +986,11 @@ async function handleDeleteReview(id) {
 }
 
 onMounted(() => {
-  loadAllData();
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      loadAllData();
+    }, 50);
+  });
 });
 </script>
 
