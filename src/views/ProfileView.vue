@@ -86,7 +86,7 @@
       <button
         class="dash-tab-btn"
         :class="{ active: currentTab === 'recommendations' }"
-        @click="currentTab = 'recommendations'"
+        @click="switchTab('recommendations')"
       >
         ⭐ Rekomendasi Destinasi Populer
       </button>
@@ -365,21 +365,28 @@ async function loadUserData() {
   if (!user.value) return;
   loading.value = true;
   try {
-    const [revRes, featRes, meRes] = await Promise.all([
-      api.getReviews({ user_id: user.value.id }),
-      api.getFeaturedDestinations(),
-      api.getMe()
-    ]);
-
-    if (revRes.success) myReviews.value = revRes.data || [];
-    if (featRes.success) featuredDestinations.value = featRes.data || [];
-    if (meRes.success && meRes.user) {
-      setUser(meRes.user);
+    const revRes = await api.getReviews({ user_id: user.value.id });
+    if (revRes && revRes.success) {
+      myReviews.value = revRes.data || [];
     }
   } catch (err) {
-    console.error('Error loading profile data:', err);
+    console.error('Error loading profile reviews:', err);
   } finally {
     loading.value = false;
+  }
+}
+
+async function switchTab(tab) {
+  currentTab.value = tab;
+  if (tab === 'recommendations' && featuredDestinations.value.length === 0) {
+    try {
+      const featRes = await api.getFeaturedDestinations();
+      if (featRes && featRes.success) {
+        featuredDestinations.value = featRes.data || [];
+      }
+    } catch (err) {
+      console.error('Error loading recommendations:', err);
+    }
   }
 }
 

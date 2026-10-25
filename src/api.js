@@ -98,9 +98,17 @@ export const api = {
   },
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   getMe: async () => {
+    const token = localStorage.getItem('jt_token') || sessionStorage.getItem('jt_token');
+    const userStr = localStorage.getItem('jt_user') || sessionStorage.getItem('jt_user');
+    if (token?.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-') && userStr) {
+      try {
+        return { success: true, user: JSON.parse(userStr) };
+      } catch (e) {
+        // Fall through
+      }
+    }
     const res = await request('/auth/me', { auth: true });
     if (res.success) return res;
-    const userStr = localStorage.getItem('jt_user') || sessionStorage.getItem('jt_user');
     if (userStr) {
       try {
         return { success: true, user: JSON.parse(userStr) };
