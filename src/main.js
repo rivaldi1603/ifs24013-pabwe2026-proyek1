@@ -11,10 +11,10 @@ router.isReady().then(() => {
   app.mount('#app');
 });
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('pageshow', (event) => {
+if (typeof globalThis.window !== 'undefined') {
+  globalThis.addEventListener('pageshow', (event) => {
     if (event.persisted) {
-      window.dispatchEvent(new CustomEvent('jt:auth-change'));
+      globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
     }
   });
 }

@@ -369,8 +369,8 @@ async function handleSubmit() {
 }
 
 .auth-tab.active {
-  color: #0369a1;
-  border-bottom-color: #0284c7;
+  color: #075985;
+  border-bottom-color: #075985;
 }
 
 .auth-notice {
@@ -392,7 +392,7 @@ async function handleSubmit() {
 }
 
 .auth-switch a {
-  color: #0369a1;
+  color: #075985;
   font-weight: 700;
   text-decoration: underline;
 }

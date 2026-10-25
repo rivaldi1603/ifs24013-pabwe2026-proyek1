@@ -80,8 +80,12 @@ for (const route of routes) {
   if (chunkPrefix) {
     const jsChunk = assetFiles.find(f => f.startsWith(`${chunkPrefix}-`) && f.endsWith('.js'));
     const cssChunk = assetFiles.find(f => f.startsWith(`${chunkPrefix}-`) && f.endsWith('.css'));
+    const apiChunk = assetFiles.find(f => f.startsWith('api-') && f.endsWith('.js'));
 
     let preloadTags = '';
+    if (apiChunk) {
+      preloadTags += `<link rel="modulepreload" crossorigin href="/assets/${apiChunk}">`;
+    }
     if (jsChunk) {
       preloadTags += `<link rel="modulepreload" crossorigin href="/assets/${jsChunk}">`;
     }

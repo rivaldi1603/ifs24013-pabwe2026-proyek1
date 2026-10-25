@@ -30,8 +30,8 @@ function getHeaders(includeAuth = false) {
 
 const activeControllers = new Set();
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('pagehide', () => {
+if (typeof globalThis.window !== 'undefined') {
+  globalThis.addEventListener('pagehide', () => {
     for (const controller of activeControllers) {
       controller.abort();
     }
@@ -124,7 +124,7 @@ export const api = {
       try {
         return { success: true, user: JSON.parse(userStr) };
       } catch (e) {
-        // Fall through
+        console.error('Failed to parse cached demo user session:', e);
       }
     }
     const res = await request('/auth/me', { auth: true });
