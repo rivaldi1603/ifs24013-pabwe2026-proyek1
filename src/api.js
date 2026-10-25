@@ -2,12 +2,12 @@ function resolveApiBaseUrl() {
   const envUrl = import.meta.env?.VITE_API_BASE_URL;
   let url = typeof envUrl === 'string' && envUrl.trim()
     ? envUrl.trim()
-    : 'https://ifs24013-pabwe2026-proyek1-be.s1if.cloud/api';
+    : 'https://ifs24013-pabwe2026-proyek1-be.vercel.app/api';
 
   if (url.endsWith('/ap')) {
     url = `${url}i`;
   }
-  if (url.includes('s1if.cloud') && !url.includes('/api')) {
+  if (!url.endsWith('/api')) {
     url = `${url.replace(/\/+$/, '')}/api`;
   }
   return url.replace(/\/+$/, '');

@@ -727,22 +727,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, shallowRef, computed, onMounted } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../auth';
 
 const { currentUser: user } = useAuth();
 
-// Datasets
-const destinations = ref([]);
-const services = ref([]);
-const transportRoutes = ref([]);
-const culinaryItems = ref([]);
-const articles = ref([]);
-const allReviews = ref([]);
-const usersList = ref([]);
-const regencies = ref([]);
-const categories = ref([]);
+// Datasets (using shallowRef to minimize deep reactive proxy overhead)
+const destinations = shallowRef([]);
+const services = shallowRef([]);
+const transportRoutes = shallowRef([]);
+const culinaryItems = shallowRef([]);
+const articles = shallowRef([]);
+const allReviews = shallowRef([]);
+const usersList = shallowRef([]);
+const regencies = shallowRef([]);
+const categories = shallowRef([]);
 
 // Active tab
 const currentTab = ref('destinations');
@@ -773,27 +773,43 @@ const articleForm = ref({ id: null, title: '', regency_id: null, published_at: n
 
 async function loadAllData() {
   try {
-    const [destRes, servRes, transRes, culinRes, artRes, revRes, userRes, regRes, catRes] = await Promise.all([
-      api.getDestinations({ limit: 100 }),
-      api.getServices({ limit: 100 }),
-      api.getTransport(),
-      api.getCulinary(),
-      api.getArticles(),
-      api.getReviews({ limit: 100 }),
-      api.getUsers(),
+    // 1. Prioritize active tab (Destinations) and select metadata to unblock main thread
+    const [destRes, regRes, catRes] = await Promise.all([
+      api.getDestinations({ limit: 50 }),
       api.getRegencies(),
       api.getCategories()
     ]);
 
     if (destRes.success) destinations.value = destRes.data || [];
-    if (servRes.success) services.value = servRes.data || [];
-    if (transRes.success) transportRoutes.value = transRes.data || [];
-    if (culinRes.success) culinaryItems.value = culinRes.data || [];
-    if (artRes.success) articles.value = artRes.data || [];
-    if (revRes.success) allReviews.value = revRes.data || [];
-    if (userRes.success) usersList.value = userRes.data || [];
     if (regRes.success) regencies.value = regRes.data || [];
     if (catRes.success) categories.value = catRes.data || [];
+
+    // 2. Defer loading secondary tabs using requestIdleCallback to eliminate long tasks
+    const deferTask = typeof window !== 'undefined' && window.requestIdleCallback
+      ? window.requestIdleCallback
+      : ((cb) => setTimeout(cb, 120));
+
+    deferTask(async () => {
+      try {
+        const [servRes, transRes, culinRes, artRes, revRes, userRes] = await Promise.all([
+          api.getServices({ limit: 50 }),
+          api.getTransport(),
+          api.getCulinary(),
+          api.getArticles(),
+          api.getReviews({ limit: 50 }),
+          api.getUsers()
+        ]);
+
+        if (servRes.success) services.value = servRes.data || [];
+        if (transRes.success) transportRoutes.value = transRes.data || [];
+        if (culinRes.success) culinaryItems.value = culinRes.data || [];
+        if (artRes.success) articles.value = artRes.data || [];
+        if (revRes.success) allReviews.value = revRes.data || [];
+        if (userRes.success) usersList.value = userRes.data || [];
+      } catch (err) {
+        console.error('Error loading deferred admin content:', err);
+      }
+    });
   } catch (err) {
     console.error('Error loading admin content:', err);
   }
@@ -1042,6 +1058,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   margin-bottom: 1.75rem;
+  contain: layout style;
 }
 
 .metric-card {
@@ -1121,6 +1138,8 @@ onMounted(() => {
 .tab-panel {
   padding: 1.75rem;
   border-radius: var(--radius-xl);
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 
 .panel-header {

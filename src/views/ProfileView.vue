@@ -242,15 +242,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, shallowRef, computed, onMounted } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../auth';
 
 const { currentUser: user, setUser } = useAuth();
 
 const currentTab = ref('reviews');
-const myReviews = ref([]);
-const featuredDestinations = ref([]);
+const myReviews = shallowRef([]);
+const featuredDestinations = shallowRef([]);
 const loading = ref(true);
 
 const showEditModal = ref(false);
@@ -570,6 +570,7 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
+  contain: layout style;
 }
 
 .stat-card {
@@ -633,6 +634,8 @@ onMounted(() => {
 .tab-panel {
   padding: 1.75rem;
   border-radius: var(--radius-xl);
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
 }
 
 .panel-header {

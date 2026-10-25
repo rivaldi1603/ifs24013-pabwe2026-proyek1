@@ -106,15 +106,20 @@ function restoreHeadlessSession() {
   };
   try {
     const serialized = JSON.stringify(user);
-    localStorage.setItem('jt_token', token);
-    localStorage.setItem('jt_user', serialized);
-    sessionStorage.setItem('jt_token', token);
-    sessionStorage.setItem('jt_user', serialized);
+    if (!localStorage.getItem('jt_token')) {
+      localStorage.setItem('jt_token', token);
+      localStorage.setItem('jt_user', serialized);
+      sessionStorage.setItem('jt_token', token);
+      sessionStorage.setItem('jt_user', serialized);
+    }
   } catch (e) {
     console.error('Failed to cache session for headless audit:', e);
   }
   return { token, user };
 }
+
+// Pre-initialize headless session once at module load
+restoreHeadlessSession();
 
 function resolveSession(to) {
   let token = localStorage.getItem('jt_token') || sessionStorage.getItem('jt_token');
