@@ -116,6 +116,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '../api';
+import { truncateText as truncate } from '../utils/formatters';
 
 const culinaryItems = ref([]);
 const restaurants = ref([]);
@@ -133,11 +134,6 @@ function debounceSearch() {
   timeout = setTimeout(() => {
     fetchRestaurants();
   }, 400);
-}
-
-function truncate(str, max = 80) {
-  if (!str) return '';
-  return str.length > max ? str.substring(0, max) + '...' : str;
 }
 
 async function fetchRestaurants() {

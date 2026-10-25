@@ -65,6 +65,8 @@
 </template>
 
 <script setup>
+import { truncateText as truncate } from '../utils/formatters';
+
 const props = defineProps({
   item: {
     type: Object,
@@ -76,11 +78,6 @@ const defaultImage = 'https://images.unsplash.com/photo-1596401057633-54a8fe8ef6
 
 function onImageError(e) {
   e.target.src = defaultImage;
-}
-
-function truncate(str, max = 50) {
-  if (!str) return '';
-  return str.length > max ? str.substring(0, max) + '...' : str;
 }
 </script>
 

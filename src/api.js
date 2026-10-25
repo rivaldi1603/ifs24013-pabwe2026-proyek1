@@ -74,14 +74,12 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
     return { success: false, message: `Respons server tidak valid (HTTP ${res.status}).` };
   }
 
-  if (auth && (res.status === 401 || res.status === 403) && localStorage.getItem('jt_token')) {
-    const currentToken = localStorage.getItem('jt_token');
-    const isDemoToken = currentToken?.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-');
-    if (!isDemoToken && (res.status === 401 || /token/i.test(data?.message || ''))) {
-      localStorage.removeItem('jt_token');
-      sessionStorage.removeItem('jt_token');
-      globalThis.dispatchEvent(new CustomEvent('jt:unauthorized'));
-    }
+  if (auth && (res.status === 401 || res.status === 403)) {
+    sessionStorage.removeItem('jt_token');
+    localStorage.removeItem('jt_token');
+    sessionStorage.removeItem('jt_user');
+    localStorage.removeItem('jt_user');
+    globalThis.dispatchEvent(new CustomEvent('jt:unauthorized'));
   }
 
   if (!res.ok && data && typeof data === 'object' && data.success === undefined) {
@@ -94,50 +92,9 @@ const qs = (params = {}) => new URLSearchParams(params).toString();
 
 export const api = {
   // Auth
-  login: async (email, password) => {
-    const res = await request('/auth/login', { method: 'POST', body: { email, password } });
-    if (res.success) {
-      return res;
-    }
-    const cleanEmail = String(email || '').trim().toLowerCase();
-    if (cleanEmail === 'admin@jelajahtoba.id' && password === 'admin123') {
-      return {
-        success: true,
-        message: 'Login berhasil.',
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-admin-token',
-        user: {
-          id: 1,
-          name: 'Admin JelajahToba',
-          email: 'admin@jelajahtoba.id',
-          role: 'admin',
-          phone: '081260000001'
-        }
-      };
-    }
-    return res;
-  },
+  login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
-  getMe: async () => {
-    const token = localStorage.getItem('jt_token') || sessionStorage.getItem('jt_token');
-    const userStr = localStorage.getItem('jt_user') || sessionStorage.getItem('jt_user');
-    if (token?.startsWith('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-') && userStr) {
-      try {
-        return { success: true, user: JSON.parse(userStr) };
-      } catch (e) {
-        console.error('Failed to parse cached demo user session:', e);
-      }
-    }
-    const res = await request('/auth/me', { auth: true });
-    if (res.success) return res;
-    if (userStr) {
-      try {
-        return { success: true, user: JSON.parse(userStr) };
-      } catch (e) {
-        console.error('Failed to parse local user in getMe fallback:', e);
-      }
-    }
-    return res;
-  },
+  getMe: () => request('/auth/me', { auth: true }),
   updateProfile: (payload) => request('/auth/profile', { method: 'PUT', body: payload, auth: true }),
   getUsers: () => request('/auth/users', { auth: true }),
 

@@ -84,46 +84,9 @@ function getStoredUser() {
   }
 }
 
-function restoreHeadlessSession() {
-  const isHeadless = Boolean(navigator.webdriver || /HeadlessChrome|Lighthouse/i.test(navigator.userAgent));
-  if (!isHeadless) return null;
-
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.demo-admin-token';
-  const user = {
-    id: 1,
-    name: 'Admin JelajahToba',
-    email: 'admin@jelajahtoba.id',
-    role: 'admin',
-    phone: '081260000001'
-  };
-  try {
-    const serialized = JSON.stringify(user);
-    if (!localStorage.getItem('jt_token')) {
-      localStorage.setItem('jt_token', token);
-      localStorage.setItem('jt_user', serialized);
-      sessionStorage.setItem('jt_token', token);
-      sessionStorage.setItem('jt_user', serialized);
-    }
-  } catch (e) {
-    console.error('Failed to cache session for headless audit:', e);
-  }
-  return { token, user };
-}
-
-// Pre-initialize headless session once at module load
-restoreHeadlessSession();
-
-function resolveSession(to) {
-  let token = localStorage.getItem('jt_token') || sessionStorage.getItem('jt_token');
-  let user = getStoredUser();
-
-  if ((!token || !user) && to.meta.requiresAuth) {
-    const headlessSession = restoreHeadlessSession();
-    if (headlessSession) {
-      token = headlessSession.token;
-      user = headlessSession.user;
-    }
-  }
+function resolveSession() {
+  const token = sessionStorage.getItem('jt_token') || localStorage.getItem('jt_token');
+  const user = getStoredUser();
   return { token, user };
 }
 
@@ -137,16 +100,16 @@ function checkAuthRedirect(to, token, user) {
     }
   }
 
-  if (to.meta.guestOnly && token && user && !navigator.webdriver) {
+  if (to.meta.guestOnly && token && user) {
     return user.role === 'admin' ? { path: '/admin' } : { path: '/profil' };
   }
 
   return null;
 }
 
-// Professional Navigation Guard
+// Navigation Guard
 router.beforeEach((to, from, next) => {
-  const { token, user } = resolveSession(to);
+  const { token, user } = resolveSession();
   const redirectTarget = checkAuthRedirect(to, token, user);
   if (redirectTarget) {
     return next(redirectTarget);

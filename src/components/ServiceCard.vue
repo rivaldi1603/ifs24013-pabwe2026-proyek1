@@ -63,6 +63,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { formatServiceType, truncateText as truncate } from '../utils/formatters';
 
 const props = defineProps({
   service: {
@@ -70,22 +71,6 @@ const props = defineProps({
     required: true
   }
 });
-
-function formatServiceType(type) {
-  const map = {
-    'homestay': 'Homestay Warga',
-    'cultural_experience': 'Jasa / Budaya',
-    'tour_guide': 'Pemandu Lokal',
-    'adventure': 'Petualangan Air/Alam',
-    'boat_rental': 'Sewa Solu / Perahu'
-  };
-  return map[type] || 'Layanan Lokal';
-}
-
-function truncate(text, max = 100) {
-  if (!text) return '';
-  return text.length > max ? text.substring(0, max) + '...' : text;
-}
 
 const whatsappUrl = computed(() => {
   const wa = props.service.contact_wa || '6281260008888';

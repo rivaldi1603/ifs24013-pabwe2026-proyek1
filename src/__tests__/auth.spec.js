@@ -4,6 +4,7 @@ import { useAuth } from '../auth.js';
 describe('auth.js composable unit tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     const { logoutUser } = useAuth();
     logoutUser();
   });
@@ -29,13 +30,13 @@ describe('auth.js composable unit tests', () => {
     expect(currentUser.value).toBeNull();
   });
 
-  it('setUser saves user and token to localStorage and updates state', () => {
+  it('setUser saves user and token to storage and updates state', () => {
     const { currentUser, setUser } = useAuth();
     const mockUser = { id: 2, name: 'Admin Toba', role: 'admin' };
     setUser(mockUser, 'fake-jwt-token-123');
 
     expect(currentUser.value).toEqual(mockUser);
-    expect(localStorage.getItem('jt_token')).toBe('fake-jwt-token-123');
+    expect(sessionStorage.getItem('jt_token')).toBe('fake-jwt-token-123');
     expect(JSON.parse(localStorage.getItem('jt_user'))).toEqual(mockUser);
   });
 
@@ -54,14 +55,14 @@ describe('auth.js composable unit tests', () => {
     expect(currentUser.value).toBeNull();
   });
 
-  it('logoutUser clears localStorage and resets state', () => {
+  it('logoutUser clears storage and resets state', () => {
     const { currentUser, setUser, logoutUser } = useAuth();
     setUser({ id: 1, name: 'Test' }, 'token');
     expect(currentUser.value).not.toBeNull();
 
     logoutUser();
     expect(currentUser.value).toBeNull();
-    expect(localStorage.getItem('jt_token')).toBeNull();
+    expect(sessionStorage.getItem('jt_token')).toBeNull();
     expect(localStorage.getItem('jt_user')).toBeNull();
   });
 
@@ -72,7 +73,7 @@ describe('auth.js composable unit tests', () => {
     window.dispatchEvent(new CustomEvent('jt:unauthorized'));
 
     expect(currentUser.value).toBeNull();
-    expect(localStorage.getItem('jt_token')).toBeNull();
+    expect(sessionStorage.getItem('jt_token')).toBeNull();
   });
 
   it('responds to storage and jt:auth-change events', () => {

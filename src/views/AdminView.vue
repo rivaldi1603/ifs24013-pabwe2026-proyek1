@@ -485,244 +485,44 @@
     </div>
 
     <!-- ==================== MODALS ==================== -->
+    <DestinationModal
+      v-model="destModalOpen"
+      :form="destForm"
+      :categories="categories"
+      :regencies="regencies"
+      :saving="saving"
+      @save="saveDestination"
+    />
 
-    <!-- MODAL 1: DESTINASI -->
-    <div v-if="destModalOpen" class="modal-overlay" @click.self="destModalOpen = false">
-      <div class="modal-card fade-in">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ destForm.id ? 'Edit Destinasi' : 'Tambah Destinasi Baru' }}</h2>
-          <button @click="destModalOpen = false" class="modal-close-btn">&times;</button>
-        </div>
-        <form @submit.prevent="saveDestination" class="modal-form-grid">
-          <div class="form-group full-width">
-            <label for="dest-name" class="form-label">Nama Tempat Wisata *</label>
-            <input id="dest-name" v-model="destForm.name" type="text" class="form-input" required />
-          </div>
-          <div class="form-group">
-            <label for="dest-category" class="form-label">Kategori *</label>
-            <select id="dest-category" v-model="destForm.category_id" class="form-select" required>
-              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="dest-regency" class="form-label">Kabupaten *</label>
-            <select id="dest-regency" v-model="destForm.regency_id" class="form-select" required>
-              <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="dest-price" class="form-label">Tarif Tiket Display</label>
-            <input id="dest-price" v-model="destForm.price_display" type="text" placeholder="Rp 10.000 / Gratis" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="dest-hours" class="form-label">Jam Operasional</label>
-            <input id="dest-hours" v-model="destForm.operational_hours" type="text" placeholder="08.00 - 18.00 WIB" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="dest-address" class="form-label">Alamat Lengkap</label>
-            <input id="dest-address" v-model="destForm.address" type="text" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="dest-image" class="form-label">URL Gambar</label>
-            <input id="dest-image" v-model="destForm.image_url" type="text" placeholder="https://..." class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="dest-description" class="form-label">Deskripsi Lengkap</label>
-            <textarea id="dest-description" v-model="destForm.description" rows="3" class="form-textarea"></textarea>
-          </div>
-          <div class="modal-actions full-width">
-            <button type="button" @click="destModalOpen = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan Destinasi' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ServiceModal
+      v-model="serviceModalOpen"
+      :form="serviceForm"
+      :regencies="regencies"
+      :saving="saving"
+      @save="saveService"
+    />
 
-    <!-- MODAL 2: JASA / HOMESTAY -->
-    <div v-if="serviceModalOpen" class="modal-overlay" @click.self="serviceModalOpen = false">
-      <div class="modal-card fade-in">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ serviceForm.id ? 'Edit Jasa / Homestay' : 'Tambah Jasa Baru' }}</h2>
-          <button @click="serviceModalOpen = false" class="modal-close-btn">&times;</button>
-        </div>
-        <form @submit.prevent="saveService" class="modal-form-grid">
-          <div class="form-group full-width">
-            <label for="srv-name" class="form-label">Nama Layanan *</label>
-            <input id="srv-name" v-model="serviceForm.name" type="text" class="form-input" required />
-          </div>
-          <div class="form-group">
-            <label for="srv-provider" class="form-label">Penyedia / Warga *</label>
-            <input id="srv-provider" v-model="serviceForm.provider_name" type="text" class="form-input" required />
-          </div>
-          <div class="form-group">
-            <label for="srv-type" class="form-label">Jenis Layanan</label>
-            <select id="srv-type" v-model="serviceForm.service_type" class="form-select">
-              <option value="cultural_experience">Workshop & Budaya</option>
-              <option value="homestay">Homestay Warga</option>
-              <option value="tour_guide">Pemandu Lokal</option>
-              <option value="adventure">Petualangan Air/Alam</option>
-              <option value="boat_rental">Sewa Solu / Perahu</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="srv-regency" class="form-label">Kabupaten *</label>
-            <select id="srv-regency" v-model="serviceForm.regency_id" class="form-select" required>
-              <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="srv-wa" class="form-label">Nomor WhatsApp</label>
-            <input id="srv-wa" v-model="serviceForm.contact_wa" type="text" placeholder="6281234567890" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="srv-price" class="form-label">Tarif Display</label>
-            <input id="srv-price" v-model="serviceForm.price_display" type="text" placeholder="Rp 150.000" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="srv-unit" class="form-label">Satuan Tarif</label>
-            <input id="srv-unit" v-model="serviceForm.price_unit" type="text" placeholder="per malam / per orang" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="srv-desc" class="form-label">Deskripsi Layanan</label>
-            <textarea id="srv-desc" v-model="serviceForm.description" rows="3" class="form-textarea"></textarea>
-          </div>
-          <div class="modal-actions full-width">
-            <button type="button" @click="serviceModalOpen = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan Layanan' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <TransportModal
+      v-model="transportModalOpen"
+      :form="transportForm"
+      :saving="saving"
+      @save="saveTransport"
+    />
 
-    <!-- MODAL 3: TRANSPORTASI / FERRY -->
-    <div v-if="transportModalOpen" class="modal-overlay" @click.self="transportModalOpen = false">
-      <div class="modal-card fade-in">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ transportForm.id ? 'Edit Rute Penyeberangan' : 'Tambah Rute Penyeberangan Baru' }}</h2>
-          <button @click="transportModalOpen = false" class="modal-close-btn">&times;</button>
-        </div>
-        <form @submit.prevent="saveTransport" class="modal-form-grid">
-          <div class="form-group full-width">
-            <label for="trans-name" class="form-label">Nama Rute / Dermaga *</label>
-            <input id="trans-name" v-model="transportForm.name" type="text" class="form-input" placeholder="Contoh: Dermaga Ajibata - Tomok (KMP Ihan Batak)" required />
-          </div>
-          <div class="form-group">
-            <label for="trans-type" class="form-label">Jenis Transportasi</label>
-            <select id="trans-type" v-model="transportForm.transport_type" class="form-select">
-              <option value="ferry">Kapal Motor Penyeberangan (KMP Ferry)</option>
-              <option value="traditional_boat">Kapal Kayu Tradisional</option>
-              <option value="land_shuttle">Shuttle / Angkutan Darat</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="trans-direction" class="form-label">Arah / Lintasan *</label>
-            <input id="trans-direction" v-model="transportForm.route_direction" type="text" placeholder="Contoh: Ajibata (Toba) ⇄ Tomok (Samosir)" class="form-input" required />
-          </div>
-          <div class="form-group">
-            <label for="trans-departure" class="form-label">Jadwal Keberangkatan</label>
-            <input id="trans-departure" v-model="transportForm.departure_hours" type="text" placeholder="Contoh: 07.30, 09.30, 11.30, 13.30, 15.30, 18.00 WIB" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="trans-price" class="form-label">Tarif Display</label>
-            <input id="trans-price" v-model="transportForm.price_display" type="text" placeholder="Rp 15.000 / orang (Kendaraan Rp 50.000)" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="trans-operator" class="form-label">Operator / Pengelola</label>
-            <input id="trans-operator" v-model="transportForm.operator" type="text" placeholder="PT ASDP Indonesia Ferry / Swasta" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label for="trans-contact" class="form-label">Kontak / Call Center</label>
-            <input id="trans-contact" v-model="transportForm.contact" type="text" placeholder="191 (ASDP) / 0812345678" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="trans-desc" class="form-label">Catatan / Deskripsi Rute</label>
-            <textarea id="trans-desc" v-model="transportForm.description" rows="2" class="form-textarea" placeholder="Waktu tempuh sekitar 45 menit, melayani kendaraan roda 2 dan roda 4."></textarea>
-          </div>
-          <div class="modal-actions full-width">
-            <button type="button" @click="transportModalOpen = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan Rute' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <CulinaryModal
+      v-model="culinaryModalOpen"
+      :form="culinaryForm"
+      :saving="saving"
+      @save="saveCulinary"
+    />
 
-    <!-- MODAL 4: KULINER -->
-    <div v-if="culinaryModalOpen" class="modal-overlay" @click.self="culinaryModalOpen = false">
-      <div class="modal-card fade-in">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ culinaryForm.id ? 'Edit Kuliner Khas' : 'Tambah Menu Kuliner Khas' }}</h2>
-          <button @click="culinaryModalOpen = false" class="modal-close-btn">&times;</button>
-        </div>
-        <form @submit.prevent="saveCulinary" class="modal-form-grid">
-          <div class="form-group full-width">
-            <label for="cul-name" class="form-label">Nama Makanan / Minuman *</label>
-            <input id="cul-name" v-model="culinaryForm.name" type="text" class="form-input" placeholder="Contoh: Ikan Mas Arsik" required />
-          </div>
-          <div class="form-group">
-            <label for="cul-halal" class="form-label">Status Kehalalan</label>
-            <select id="cul-halal" v-model="culinaryForm.halal_status" class="form-select">
-              <option value="Halal">Halal (Ikan / Sayur / Ayam / Kue)</option>
-              <option value="Non-Halal">Non-Halal (Tradisional Khas)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="cul-origin" class="form-label">Asal Daerah / Wilayah</label>
-            <input id="cul-origin" v-model="culinaryForm.origin_region" type="text" placeholder="Contoh: Samosir / Balige" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="cul-image" class="form-label">URL Foto Makanan</label>
-            <input id="cul-image" v-model="culinaryForm.image_url" type="text" placeholder="https://..." class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="cul-desc" class="form-label">Deskripsi & Ciri Khas Bumbu</label>
-            <textarea id="cul-desc" v-model="culinaryForm.description" rows="3" class="form-textarea" placeholder="Bumbu andaliman yang beraroma jeruk tajam, menggunakan asam gelugur..."></textarea>
-          </div>
-          <div class="modal-actions full-width">
-            <button type="button" @click="culinaryModalOpen = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan Kuliner' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- MODAL 5: ARTIKEL / CERITA TOBA -->
-    <div v-if="articleModalOpen" class="modal-overlay" @click.self="articleModalOpen = false">
-      <div class="modal-card fade-in">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ articleForm.id ? 'Edit Cerita Toba' : 'Tulis Cerita / Artikel Baru' }}</h2>
-          <button @click="articleModalOpen = false" class="modal-close-btn">&times;</button>
-        </div>
-        <form @submit.prevent="saveArticle" class="modal-form-grid">
-          <div class="form-group full-width">
-            <label for="art-title" class="form-label">Judul Artikel / Cerita Budaya *</label>
-            <input id="art-title" v-model="articleForm.title" type="text" class="form-input" placeholder="Contoh: Legenda Terbentuknya Danau Toba dan Kearifan Tradisi Batak" required />
-          </div>
-          <div class="form-group">
-            <label for="art-regency" class="form-label">Wilayah Kabupaten Terkait</label>
-            <select id="art-regency" v-model="articleForm.regency_id" class="form-select">
-              <option :value="null">Kawasan Danau Toba Umum</option>
-              <option v-for="r in regencies" :key="r.id" :value="r.id">{{ r.name }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="art-date" class="form-label">Tanggal Publikasi</label>
-            <input id="art-date" v-model="articleForm.published_at" type="date" class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="art-source" class="form-label">Tautan Sumber Berita / Referensi Asli</label>
-            <input id="art-source" v-model="articleForm.source_url" type="text" placeholder="https://..." class="form-input" />
-          </div>
-          <div class="form-group full-width">
-            <label for="art-summary" class="form-label">Isi / Ringkasan Cerita</label>
-            <textarea id="art-summary" v-model="articleForm.summary" rows="4" class="form-textarea" placeholder="Tuliskan cerita, makna filosofis, atau ulasan perjalanan..."></textarea>
-          </div>
-          <div class="modal-actions full-width">
-            <button type="button" @click="articleModalOpen = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Publikasikan Cerita' }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ArticleModal
+      v-model="articleModalOpen"
+      :form="articleForm"
+      :regencies="regencies"
+      :saving="saving"
+      @save="saveArticle"
+    />
   </div>
 </template>
 
@@ -730,6 +530,12 @@
 import { ref, shallowRef, computed, onMounted, watch } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../auth';
+import { formatServiceType } from '../utils/formatters';
+import DestinationModal from '../components/admin/DestinationModal.vue';
+import ServiceModal from '../components/admin/ServiceModal.vue';
+import TransportModal from '../components/admin/TransportModal.vue';
+import CulinaryModal from '../components/admin/CulinaryModal.vue';
+import ArticleModal from '../components/admin/ArticleModal.vue';
 
 const { currentUser: user } = useAuth();
 
@@ -883,10 +689,6 @@ const filteredUsersList = computed(() => {
   return usersList.value.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
 });
 
-function formatServiceType(t) {
-  const map = { homestay: 'Homestay', cultural_experience: 'Budaya', tour_guide: 'Pemandu', adventure: 'Petualangan', boat_rental: 'Sewa Perahu' };
-  return map[t] || t;
-}
 
 // 1. Destinations
 function openAddDestinationModal() {

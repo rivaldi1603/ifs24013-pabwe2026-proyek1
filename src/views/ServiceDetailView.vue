@@ -159,23 +159,13 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../api';
 import ReviewModal from '../components/ReviewModal.vue';
+import { formatServiceType } from '../utils/formatters';
 
 const route = useRoute();
 const srv = ref(null);
 const loading = ref(true);
 const errorMessage = ref('');
 const showReviewModal = ref(false);
-
-function formatServiceType(type) {
-  const map = {
-    'homestay': 'Homestay Warga',
-    'cultural_experience': 'Workshop & Budaya',
-    'tour_guide': 'Pemandu Lokal',
-    'adventure': 'Petualangan Air/Alam',
-    'boat_rental': 'Sewa Solu / Perahu'
-  };
-  return map[type] || 'Layanan Lokal';
-}
 
 const whatsappUrl = computed(() => {
   if (!srv.value) return '';
