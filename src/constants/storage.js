@@ -60,7 +60,7 @@ export function isTokenExpired(token) {
   const parts = token.split('.');
   if (parts.length === 3) {
     try {
-      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadBase64 = parts[1].replaceAll('-', '+').replaceAll('_', '/');
       const jsonStr = atob(payloadBase64);
       if (jsonStr) {
         const payload = JSON.parse(jsonStr);

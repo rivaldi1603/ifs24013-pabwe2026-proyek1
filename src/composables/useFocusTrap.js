@@ -66,18 +66,16 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
       }
 
       const firstElement = focusables[0];
-      const lastElement = focusables[focusables.length - 1];
+      const lastElement = focusables.at(-1);
 
       if (event.shiftKey) {
         if (document.activeElement === firstElement || !containerRef.value.contains(document.activeElement)) {
           event.preventDefault();
           lastElement.focus();
         }
-      } else {
-        if (document.activeElement === lastElement || !containerRef.value.contains(document.activeElement)) {
-          event.preventDefault();
-          firstElement.focus();
-        }
+      } else if (document.activeElement === lastElement || !containerRef.value.contains(document.activeElement)) {
+        event.preventDefault();
+        firstElement.focus();
       }
     }
   }
@@ -89,7 +87,7 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
       document.body.style.overflow = 'hidden';
     }
 
-    window.addEventListener('keydown', handleKeydown);
+    globalThis.addEventListener('keydown', handleKeydown);
 
     nextTick(() => {
       if (autoFocus && containerRef.value) {
@@ -105,7 +103,7 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
   }
 
   function deactivate() {
-    window.removeEventListener('keydown', handleKeydown);
+    globalThis.removeEventListener('keydown', handleKeydown);
 
     if (lockScroll && document.body) {
       document.body.style.overflow = '';

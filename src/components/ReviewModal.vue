@@ -1,5 +1,12 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click.self="close" role="dialog" aria-modal="true" aria-label="Tulis Ulasan & Penilaian">
+  <dialog
+    v-if="isOpen"
+    open
+    class="modal-overlay"
+    aria-label="Tulis Ulasan & Penilaian"
+    @click.self="close"
+    @keydown.esc="close"
+  >
     <div ref="reviewModalRef" class="modal-card fade-in">
       <div class="modal-header">
         <h3 class="modal-title">Tulis Ulasan & Penilaian</h3>
@@ -83,7 +90,7 @@
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 </template>
 
 <script setup>
@@ -184,6 +191,15 @@ async function handleSubmit() {
 
 .login-gate .btn {
   text-decoration: none;
+}
+
+dialog.modal-overlay {
+  border: none;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
 }
 
 .modal-overlay {

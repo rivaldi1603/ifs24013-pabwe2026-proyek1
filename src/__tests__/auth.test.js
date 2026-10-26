@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useAuth, getAuthInstance } from '../auth.js';
+import useAuthDefault, { useAuth } from '../auth.js';
 import { useAuth as useAuthComposable } from '../composables/useAuth.js';
 
 describe('auth.js composable unit tests', () => {
@@ -13,7 +13,8 @@ describe('auth.js composable unit tests', () => {
   it('re-exports useAuth from auth.js matching composables/useAuth', () => {
     expect(typeof useAuth).toBe('function');
     expect(typeof useAuthComposable).toBe('function');
-    expect(getAuthInstance()).toBeDefined();
+    expect(useAuth).toBe(useAuthComposable);
+    expect(useAuthDefault).toBe(useAuthComposable);
     const directInstance = useAuth();
     const composableInstance = useAuthComposable();
     expect(directInstance.currentUser).toBe(composableInstance.currentUser);
