@@ -26,10 +26,9 @@
     <div class="form-group">
       <label for="trans-type" class="form-label">Jenis Transportasi</label>
       <select id="trans-type" v-model="form.transport_type" class="form-select">
-        <option value="ferry">Kapal Ferry (KMP)</option>
-        <option value="wooden_boat">Kapal Tradisional Kayu</option>
-        <option value="speedboat">Speedboat</option>
-        <option value="land_shuttle">Shuttle / Bus Darat</option>
+        <option v-for="opt in TRANSPORT_TYPE_OPTIONS" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
       </select>
     </div>
 
@@ -84,6 +83,7 @@
 <script setup>
 import BaseModal from '../common/BaseModal.vue';
 import { useFormValidation, isRequired } from '../../composables/useFormValidation.js';
+import { TRANSPORT_TYPE_OPTIONS } from '../../constants/admin.js';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

@@ -107,4 +107,6 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
+export { checkAuthRedirect, resolveSession, routes };
 export default router;
+

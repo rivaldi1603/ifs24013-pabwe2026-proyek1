@@ -9,6 +9,7 @@ import {
   REVIEW_COLUMNS,
   USER_COLUMNS,
   HALAL_STATUS_OPTIONS,
+  TRANSPORT_TYPES,
   TRANSPORT_TYPE_OPTIONS
 } from '../constants/admin.js';
 
@@ -29,8 +30,13 @@ describe('admin.js constants and schemas', () => {
     expect(USER_COLUMNS.length).toBeGreaterThan(0);
   });
 
-  it('exports valid options for select fields', () => {
+  it('exports valid options for select fields and enum', () => {
     expect(HALAL_STATUS_OPTIONS).toHaveLength(2);
-    expect(TRANSPORT_TYPE_OPTIONS).toHaveLength(3);
+    expect(TRANSPORT_TYPE_OPTIONS).toHaveLength(4);
+    expect(TRANSPORT_TYPES.FERRY).toBe('ferry');
+    expect(TRANSPORT_TYPES.TRADITIONAL_BOAT).toBe('traditional_boat');
+    expect(TRANSPORT_TYPES.SPEEDBOAT).toBe('speedboat');
+    expect(TRANSPORT_TYPES.LAND_SHUTTLE).toBe('land_shuttle');
   });
 });
+

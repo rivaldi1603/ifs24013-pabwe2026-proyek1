@@ -23,17 +23,40 @@ function loadUserFromStorage() {
   }
 }
 
-// Initial bootstrap
-loadUserFromStorage();
-
-// Global listeners for cross-tab or interceptor auth synchronization
-globalThis.addEventListener('storage', loadUserFromStorage);
-globalThis.addEventListener('jt:auth-change', loadUserFromStorage);
-globalThis.addEventListener('jt:unauthorized', () => {
+/**
+ * Handles unauthorized session expiry dispatched by API interceptors.
+ */
+function handleUnauthorized() {
   clearStoredAuth();
   currentUser.value = null;
   globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
-});
+}
+
+/**
+ * Attaches global listeners for cross-tab or interceptor auth synchronization.
+ */
+export function setupAuthListeners() {
+  if (typeof globalThis.addEventListener === 'function') {
+    globalThis.addEventListener('storage', loadUserFromStorage);
+    globalThis.addEventListener('jt:auth-change', loadUserFromStorage);
+    globalThis.addEventListener('jt:unauthorized', handleUnauthorized);
+  }
+}
+
+/**
+ * Removes global auth event listeners to prevent memory leaks and dangling handlers.
+ */
+export function removeAuthListeners() {
+  if (typeof globalThis.removeEventListener === 'function') {
+    globalThis.removeEventListener('storage', loadUserFromStorage);
+    globalThis.removeEventListener('jt:auth-change', loadUserFromStorage);
+    globalThis.removeEventListener('jt:unauthorized', handleUnauthorized);
+  }
+}
+
+// Initial bootstrap
+loadUserFromStorage();
+setupAuthListeners();
 
 /**
  * Authentication Composable (useAuth)
@@ -69,6 +92,9 @@ export function useAuth() {
     currentUser,
     setUser,
     logoutUser,
-    loadUserFromStorage
+    loadUserFromStorage,
+    setupAuthListeners,
+    removeAuthListeners
   };
 }
+

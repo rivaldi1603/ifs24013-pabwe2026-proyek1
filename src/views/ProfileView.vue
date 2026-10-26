@@ -50,29 +50,10 @@
     </div>
 
     <!-- STATS / OVERVIEW CARDS -->
-    <div class="user-stats-grid fade-in">
-      <div class="stat-card card">
-        <span class="stat-icon">💬</span>
-        <div>
-          <span class="stat-num">{{ myReviews.length }}</span>
-          <span class="stat-label">Ulasan Ditulis</span>
-        </div>
-      </div>
-      <div class="stat-card card">
-        <span class="stat-icon">⭐</span>
-        <div>
-          <span class="stat-num">{{ averageGivenRating }}</span>
-          <span class="stat-label">Rata-rata Rating Diberikan</span>
-        </div>
-      </div>
-      <div class="stat-card card">
-        <span class="stat-icon">🗺️</span>
-        <div>
-          <span class="stat-num">8</span>
-          <span class="stat-label">Kabupaten Kawasan Toba</span>
-        </div>
-      </div>
-    </div>
+    <ProfileStats
+      :reviews-count="myReviews.length"
+      :average-rating="averageGivenRating"
+    />
 
     <!-- TABS -->
     <div class="dash-tabs fade-in">
@@ -164,80 +145,13 @@
     </div>
 
     <!-- MODAL EDIT PROFIL & UPLOAD FOTO -->
-    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
-      <div class="modal-card fade-in" style="max-width: 540px;">
-        <div class="modal-header">
-          <h2 class="modal-title">Edit Profil Pengguna</h2>
-          <button @click="showEditModal = false" class="modal-close-btn">&times;</button>
-        </div>
-
-        <form @submit.prevent="saveProfile" class="edit-profile-form">
-          <!-- AVATAR UPLOAD & PREVIEW -->
-          <div class="form-group text-center">
-            <span class="form-label" style="display:block; margin-bottom: 0.75rem;">Foto Profil</span>
-            <div class="avatar-preview-box">
-              <img v-if="editForm.avatar_url" :src="editForm.avatar_url" alt="Preview Foto" class="preview-avatar-img" />
-              <div v-else class="preview-avatar-placeholder">
-                {{ editForm.name ? editForm.name.charAt(0).toUpperCase() : 'U' }}
-              </div>
-            </div>
-
-            <div class="avatar-upload-controls">
-              <label class="btn btn-secondary btn-sm upload-btn-label">
-                📁 Upload Foto Baru
-                <input type="file" accept="image/*" @change="handleFileUpload" style="display: none;" />
-              </label>
-              <button v-if="editForm.avatar_url" type="button" @click="editForm.avatar_url = ''" class="btn btn-sm btn-link-danger">
-                Hapus Foto
-              </button>
-            </div>
-            <small class="upload-hint">Foto otomatis di-crop & dioptimalkan (JPG, PNG, WebP)</small>
-          </div>
-
-          <!-- NAMA LENGKAP -->
-          <div class="form-group">
-            <label for="prof-name" class="form-label">Nama Lengkap *</label>
-            <input id="prof-name" v-model="editForm.name" type="text" class="form-input" placeholder="Nama Anda" required />
-          </div>
-
-          <!-- EMAIL (READONLY) -->
-          <div class="form-group">
-            <label for="prof-email" class="form-label">Alamat Email</label>
-            <input id="prof-email" :value="user?.email" type="email" class="form-input disabled-input" disabled />
-            <small class="field-hint">Alamat email digunakan untuk login dan tidak dapat diubah.</small>
-          </div>
-
-          <!-- NOMOR HP / WHATSAPP -->
-          <div class="form-group">
-            <label for="prof-phone" class="form-label">Nomor Telepon / WhatsApp</label>
-            <input id="prof-phone" v-model="editForm.phone" type="text" class="form-input" placeholder="Contoh: 081234567890" />
-          </div>
-
-          <!-- BIO -->
-          <div class="form-group">
-            <label for="prof-bio" class="form-label">Bio / Tentang Diri Anda</label>
-            <textarea
-              id="prof-bio"
-              v-model="editForm.bio"
-              rows="3"
-              class="form-textarea"
-              placeholder="Ceritakan minat Anda dalam berwisata, makanan favorit di Danau Toba, atau profesi Anda..."
-            ></textarea>
-          </div>
-
-          <div v-if="editError" class="alert-error">
-            {{ editError }}
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="showEditModal = false" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">
-              {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ProfileEditModal
+      v-model="showEditModal"
+      :user="user"
+      :saving="saving"
+      :error-message="editError"
+      @save="saveProfile"
+    />
   </div>
 </template>
 
@@ -245,6 +159,8 @@
 import { ref, shallowRef, computed, onMounted } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../composables/useAuth';
+import ProfileStats from '../components/profile/ProfileStats.vue';
+import ProfileEditModal from '../components/profile/ProfileEditModal.vue';
 
 const { currentUser: user, setUser } = useAuth();
 
@@ -258,13 +174,6 @@ const saving = ref(false);
 const editError = ref('');
 const saveSuccessMsg = ref('');
 
-const editForm = ref({
-  name: '',
-  phone: '',
-  bio: '',
-  avatar_url: ''
-});
-
 const averageGivenRating = computed(() => {
   if (myReviews.value.length === 0) return '0.0';
   const sum = myReviews.value.reduce((acc, r) => acc + Number(r.rating || 0), 0);
@@ -272,76 +181,15 @@ const averageGivenRating = computed(() => {
 });
 
 function openEditModal() {
-  if (user.value) {
-    editForm.value = {
-      name: user.value.name || '',
-      phone: user.value.phone || '',
-      bio: user.value.bio || '',
-      avatar_url: user.value.avatar_url || ''
-    };
-  }
   editError.value = '';
   showEditModal.value = true;
 }
 
-// Convert and compress chosen file to lightweight Base64 image
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  if (file.size > 10 * 1024 * 1024) {
-    editError.value = 'Ukuran file foto maksimal adalah 10 MB.';
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const img = new Image();
-    img.onload = () => {
-      // Resize to square max 260x260 for optimal avatar
-      const canvas = document.createElement('canvas');
-      const MAX_SIZE = 260;
-      let width = img.width;
-      let height = img.height;
-
-      // Crop to square from center
-      const minSide = Math.min(width, height);
-      const startX = (width - minSide) / 2;
-      const startY = (height - minSide) / 2;
-
-      canvas.width = MAX_SIZE;
-      canvas.height = MAX_SIZE;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, startX, startY, minSide, minSide, 0, 0, MAX_SIZE, MAX_SIZE);
-
-      // Export as jpeg 0.85 quality -> compact ~25KB
-      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      editForm.value.avatar_url = compressedDataUrl;
-      editError.value = '';
-    };
-    img.onerror = () => {
-      editError.value = 'Gagal membaca format gambar.';
-    };
-    img.src = event.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function saveProfile() {
-  if (!editForm.value.name.trim()) {
-    editError.value = 'Nama lengkap wajib diisi.';
-    return;
-  }
-
+async function saveProfile(formData) {
   saving.value = true;
   editError.value = '';
   try {
-    const res = await api.updateProfile({
-      name: editForm.value.name.trim(),
-      phone: editForm.value.phone.trim(),
-      bio: editForm.value.bio.trim(),
-      avatar_url: editForm.value.avatar_url
-    });
+    const res = await api.updateProfile(formData);
 
     if (res.success && res.user) {
       setUser(res.user);
@@ -817,142 +665,7 @@ onMounted(() => {
   color: var(--text-muted);
 }
 
-/* MODAL EDIT PROFIL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
 
-.modal-card {
-  background: white;
-  border-radius: var(--radius-xl);
-  width: 100%;
-  padding: 2rem;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.modal-title {
-  font-size: 1.35rem;
-  color: #0f172a;
-}
-
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.75rem;
-  color: #94a3b8;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.avatar-preview-box {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 0.75rem;
-}
-
-.preview-avatar-img {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #10b981;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.preview-avatar-placeholder {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  color: #475569;
-  font-size: 2.25rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-upload-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
-}
-
-.upload-btn-label {
-  cursor: pointer;
-}
-
-.btn-link-danger {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-link-danger:hover {
-  text-decoration: underline;
-}
-
-.upload-hint {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  display: block;
-}
-
-.disabled-input {
-  background: #f1f5f9;
-  color: #475569;
-  cursor: not-allowed;
-}
-
-.field-hint {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.alert-error {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #b91c1c;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  margin-top: 1rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
-}
 
 @media (max-width: 768px) {
   .profile-header {

@@ -149,8 +149,8 @@
         <span class="table-sub">{{ item.operator || 'Dishub' }}</span>
       </template>
       <template #cell-transport_type="{ item }">
-        <span class="badge" :class="item.transport_type === 'ferry' ? 'badge-role-admin' : 'badge-role-partner'">
-          {{ item.transport_type === 'ferry' ? '🚢 Ferry KMP' : (item.transport_type === 'traditional_boat' ? '⛵ Kapal Tradisional' : '🚐 Shuttle') }}
+        <span class="badge" :class="getTransportOption(item.transport_type).badgeClass">
+          {{ getTransportOption(item.transport_type).label }}
         </span>
       </template>
       <template #cell-route_direction="{ item }">
@@ -357,7 +357,8 @@ import {
   CULINARY_COLUMNS,
   ARTICLE_COLUMNS,
   REVIEW_COLUMNS,
-  USER_COLUMNS
+  USER_COLUMNS,
+  TRANSPORT_TYPE_OPTIONS
 } from '../constants/admin';
 import AdminEntityTable from '../components/admin/AdminEntityTable.vue';
 import DestinationModal from '../components/admin/DestinationModal.vue';
@@ -369,6 +370,10 @@ import ArticleModal from '../components/admin/ArticleModal.vue';
 const { currentUser: user } = useAuth();
 const { confirm } = useConfirm();
 const { success: toastSuccess, error: toastError } = useToast();
+
+function getTransportOption(type) {
+  return TRANSPORT_TYPE_OPTIONS.find(o => o.value === type) || { label: type, badgeClass: 'badge-role-partner' };
+}
 
 // Active tab
 const currentTab = ref('destinations');

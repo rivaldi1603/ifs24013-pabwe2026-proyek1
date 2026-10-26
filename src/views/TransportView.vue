@@ -18,18 +18,13 @@
         Semua Transportasi ({{ routes.length }})
       </button>
       <button
+        v-for="opt in TRANSPORT_TYPE_OPTIONS"
+        :key="opt.value"
         class="tab-btn"
-        :class="{ active: currentTab === 'ferry' }"
-        @click="currentTab = 'ferry'"
+        :class="{ active: currentTab === opt.value }"
+        @click="currentTab = opt.value"
       >
-        🚢 Kapal Ferry ASDP Penyeberangan
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: currentTab === 'land_shuttle' }"
-        @click="currentTab = 'land_shuttle'"
-      >
-        🚐 Angkutan Antarkota & Travel Darat (KBT/KPT)
+        {{ opt.label }}
       </button>
     </div>
 
@@ -47,12 +42,11 @@
       >
         <div class="route-header">
           <div class="route-icon-box" :class="route.transport_type === 'ferry' ? 'icon-ferry' : 'icon-shuttle'">
-            <span v-if="route.transport_type === 'ferry'">🚢</span>
-            <span v-else>🚐</span>
+            <span>{{ getTransportIcon(route.transport_type) }}</span>
           </div>
           <div>
             <span class="route-type-tag">
-              {{ route.transport_type === 'ferry' ? 'Kapal Ferry Penyeberangan' : 'Angkutan Darat / Shuttle' }}
+              {{ getTransportLabel(route.transport_type) }}
             </span>
             <h3 class="route-name">{{ route.name }}</h3>
           </div>
@@ -95,10 +89,23 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { api } from '../api';
+import { TRANSPORT_TYPE_OPTIONS } from '../constants/admin.js';
 
 const routes = ref([]);
 const currentTab = ref('all');
 const loading = ref(true);
+
+function getTransportLabel(type) {
+  const found = TRANSPORT_TYPE_OPTIONS.find(o => o.value === type);
+  return found ? found.label : (type === 'ferry' ? 'Kapal Ferry Penyeberangan' : 'Angkutan Darat');
+}
+
+function getTransportIcon(type) {
+  if (type === 'ferry') return '🚢';
+  if (type === 'traditional_boat') return '⛵';
+  if (type === 'speedboat') return '🚤';
+  return '🚐';
+}
 
 const filteredRoutes = computed(() => {
   if (currentTab.value === 'all') return routes.value;

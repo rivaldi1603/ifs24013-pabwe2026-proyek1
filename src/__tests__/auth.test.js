@@ -120,4 +120,38 @@ describe('auth.js composable unit tests', () => {
     expect(sessionStorage.getItem('jt_token')).toBeNull();
     expect(sessionStorage.getItem('jt_user')).toBeNull();
   });
+
+  it('allows unregistering and re-registering global auth listeners cleanly', () => {
+    const { currentUser, setUser, removeAuthListeners, setupAuthListeners } = useAuth();
+    setUser({ id: 88, name: 'Active User' }, 'tok');
+
+    removeAuthListeners();
+
+    // Event dispatched after removing listeners should not trigger state clear
+    window.dispatchEvent(new CustomEvent('jt:unauthorized'));
+    expect(currentUser.value).toEqual({ id: 88, name: 'Active User' });
+
+    // Re-attach listeners
+    setupAuthListeners();
+    window.dispatchEvent(new CustomEvent('jt:unauthorized'));
+    expect(currentUser.value).toBeNull();
+  });
+
+  it('safely handles environments without addEventListener or removeEventListener', () => {
+    const { setupAuthListeners, removeAuthListeners } = useAuth();
+    const originalAdd = globalThis.addEventListener;
+    const originalRemove = globalThis.removeEventListener;
+
+    try {
+      globalThis.addEventListener = undefined;
+      globalThis.removeEventListener = undefined;
+      expect(() => setupAuthListeners()).not.toThrow();
+      expect(() => removeAuthListeners()).not.toThrow();
+    } finally {
+      globalThis.addEventListener = originalAdd;
+      globalThis.removeEventListener = originalRemove;
+    }
+  });
 });
+
+
