@@ -1,104 +1,96 @@
 <template>
-  <dialog
-    v-if="isOpen"
-    open
-    class="modal-overlay"
-    aria-label="Tulis Ulasan & Penilaian"
-    @click.self="close"
-    @keydown.esc="close"
+  <BaseModal
+    :model-value="isOpen"
+    title="Tulis Ulasan & Penilaian"
+    :saving="submitting"
+    submit-text="Kirim Ulasan"
+    max-width="560px"
+    @update:model-value="(val) => { if (!val) close(); }"
+    @submit="handleSubmit"
+    @close="close"
   >
-    <div ref="reviewModalRef" class="modal-card fade-in">
-      <div class="modal-header">
-        <h3 class="modal-title">Tulis Ulasan & Penilaian</h3>
-        <button class="modal-close-btn" @click="close">&times;</button>
-      </div>
+    <p class="modal-target-info full-width">
+      Memberikan ulasan untuk: <strong>{{ targetTitle }}</strong>
+    </p>
 
-      <p class="modal-target-info">
-        Memberikan ulasan untuk: <strong>{{ targetTitle }}</strong>
+    <!-- Login gate: only registered users may post reviews -->
+    <div v-if="!currentUser" class="login-gate full-width">
+      <p class="login-gate-text">
+        Anda perlu masuk terlebih dahulu untuk menulis ulasan dan memberi bintang.
       </p>
+      <div class="modal-actions-custom">
+        <button type="button" class="btn btn-secondary" @click="close">Nanti Saja</button>
+        <router-link id="review-login" :to="{ path: '/auth/login', query: { redirect: route.fullPath } }" class="btn btn-primary" @click="close">
+          Masuk
+        </router-link>
+        <router-link id="review-register" :to="{ path: '/auth/register', query: { redirect: route.fullPath } }" class="btn btn-secondary" @click="close">
+          Daftar
+        </router-link>
+      </div>
+    </div>
 
-      <!-- Login gate: only registered users may post reviews -->
-      <div v-if="!currentUser" class="login-gate">
-        <p class="login-gate-text">
-          Anda perlu masuk terlebih dahulu untuk menulis ulasan dan memberi bintang.
-        </p>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" @click="close">Nanti Saja</button>
-          <router-link id="review-login" :to="{ path: '/auth/login', query: { redirect: route.fullPath } }" class="btn btn-primary" @click="close">
-            Masuk
-          </router-link>
-          <router-link id="review-register" :to="{ path: '/auth/register', query: { redirect: route.fullPath } }" class="btn btn-secondary" @click="close">
-            Daftar
-          </router-link>
+    <template v-else>
+      <!-- Rating Stars Selection -->
+      <div class="form-group full-width">
+        <span class="form-label">Penilaian Bintang (1 - 5):</span>
+        <div class="stars-selector">
+          <button
+            v-for="star in 5"
+            :key="star"
+            type="button"
+            class="star-btn"
+            :class="{ 'star-active': star <= rating }"
+            @click="rating = star"
+            :title="`${star} Bintang`"
+          >
+            ★
+          </button>
+          <span class="rating-text-hint">{{ rating }} dari 5 Bintang</span>
         </div>
       </div>
 
-      <form v-else @submit.prevent="handleSubmit" class="modal-form">
-        <!-- Rating Stars Selection -->
-        <div class="form-group">
-          <span class="form-label">Penilaian Bintang (1 - 5):</span>
-          <div class="stars-selector">
-            <button
-              v-for="star in 5"
-              :key="star"
-              type="button"
-              class="star-btn"
-              :class="{ 'star-active': star <= rating }"
-              @click="rating = star"
-              :title="`${star} Bintang`"
-            >
-              ★
-            </button>
-            <span class="rating-text-hint">{{ rating }} dari 5 Bintang</span>
-          </div>
-        </div>
+      <div class="form-group full-width">
+        <label for="review-author" class="form-label">Nama Anda:</label>
+        <input
+          id="review-author"
+          v-model="reviewerName"
+          type="text"
+          class="form-input"
+          placeholder="Contoh: Budi Santoso / Turis Jakarta"
+          required
+          readonly
+        />
+      </div>
 
-        <div class="form-group">
-          <label for="review-author" class="form-label">Nama Anda:</label>
-          <input
-            id="review-author"
-            v-model="reviewerName"
-            type="text"
-            class="form-input"
-            placeholder="Contoh: Budi Santoso / Turis Jakarta"
-            required
-            readonly
-          />
-        </div>
+      <div class="form-group full-width">
+        <label for="review-content" class="form-label">Ulasan Pengalaman Anda:</label>
+        <textarea
+          id="review-content"
+          v-model="reviewText"
+          rows="4"
+          class="form-textarea"
+          placeholder="Ceritakan pengalaman Anda, suasana tempat, keramahan pengelola lokal, atau saran untuk wisatawan lain..."
+          required
+        ></textarea>
+      </div>
 
-        <div class="form-group">
-          <label for="review-content" class="form-label">Ulasan Pengalaman Anda:</label>
-          <textarea
-            id="review-content"
-            v-model="reviewText"
-            rows="4"
-            class="form-textarea"
-            placeholder="Ceritakan pengalaman Anda, suasana tempat, keramahan pengelola lokal, atau saran untuk wisatawan lain..."
-            required
-          ></textarea>
-        </div>
+      <div v-if="errorMsg" class="alert-error full-width">
+        {{ errorMsg }}
+      </div>
+    </template>
 
-        <div v-if="errorMsg" class="alert-error">
-          {{ errorMsg }}
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" @click="close">Batal</button>
-          <button type="submit" class="btn btn-primary" :disabled="submitting">
-            {{ submitting ? 'Mengirimkan...' : 'Kirim Ulasan' }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </dialog>
+    <template v-if="!currentUser" #footer>
+      <div></div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { api } from '../api';
-import { useAuth } from '../composables/useAuth';
-import { useFocusTrap } from '../composables/useFocusTrap';
+import { api } from '../api.js';
+import { useAuth } from '../composables/useAuth.js';
+import BaseModal from './common/BaseModal.vue';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -120,19 +112,11 @@ const emit = defineEmits(['close', 'review-submitted']);
 const { currentUser } = useAuth();
 const route = useRoute();
 
-const reviewModalRef = ref(null);
 const rating = ref(5);
 const reviewerName = ref('');
 const reviewText = ref('');
 const submitting = ref(false);
 const errorMsg = ref('');
-
-useFocusTrap(reviewModalRef, () => props.isOpen, {
-  onClose: close,
-  autoFocus: true,
-  restoreFocus: true,
-  lockScroll: true
-});
 
 // Pre-fill user name if logged in
 watch(() => props.isOpen, (newVal) => {
@@ -166,12 +150,12 @@ async function handleSubmit() {
       review_text: reviewText.value.trim()
     });
 
-    if (res.success) {
+    if (res?.success) {
       emit('review-submitted', res.data);
       reviewText.value = '';
       close();
     } else {
-      errorMsg.value = res.message || 'Gagal mengirimkan ulasan.';
+      errorMsg.value = res?.message || 'Gagal mengirimkan ulasan.';
     }
   } catch (err) {
     console.error('Submit review error:', err);
@@ -183,117 +167,66 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.login-gate-text {
-  margin: 0.5rem 0 1.25rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.login-gate .btn {
-  text-decoration: none;
-}
-
-dialog.modal-overlay {
-  border: none;
-  max-width: 100vw;
-  max-height: 100vh;
-  width: 100vw;
-  height: 100vh;
-  box-sizing: border-box;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.modal-card {
-  background: white;
-  border-radius: var(--radius-xl);
-  max-width: 500px;
-  width: 100%;
-  padding: 1.75rem;
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.modal-target-info {
+  font-size: 0.95rem;
+  color: var(--text-muted, #64748b);
   margin-bottom: 0.5rem;
 }
 
-.modal-title {
-  font-size: 1.35rem;
-  color: var(--primary-900);
+.login-gate {
+  text-align: center;
+  padding: 1.5rem 0.5rem;
 }
 
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  line-height: 1;
+.login-gate-text {
+  color: var(--text-muted, #64748b);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
 }
 
-.modal-target-info {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-bottom: 1.25rem;
+.modal-actions-custom {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 .stars-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
 }
 
 .star-btn {
-  background: transparent;
+  background: none;
   border: none;
-  font-size: 2rem;
-  cursor: pointer;
+  font-size: 1.85rem;
   color: #cbd5e1;
-  transition: transform 0.15s;
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
   line-height: 1;
+  padding: 0;
 }
 
-.star-btn:hover {
+.star-btn:hover,
+.star-btn.star-active {
+  color: #eab308;
   transform: scale(1.15);
-}
-
-.star-active {
-  color: #f59e0b;
 }
 
 .rating-text-hint {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-muted, #64748b);
   margin-left: 0.5rem;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
 .alert-error {
-  background: #fee2e2;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
   color: #b91c1c;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.875rem;
 }
 </style>

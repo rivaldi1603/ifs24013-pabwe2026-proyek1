@@ -89,22 +89,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { api } from '../api';
-import { TRANSPORT_TYPE_OPTIONS } from '../constants/admin.js';
+import { TRANSPORT_TYPE_OPTIONS, getTransportMeta, getTransportIcon } from '../constants/transport.js';
 
 const routes = ref([]);
 const currentTab = ref('all');
 const loading = ref(true);
 
 function getTransportLabel(type) {
-  const found = TRANSPORT_TYPE_OPTIONS.find(o => o.value === type);
-  return found ? found.label : (type === 'ferry' ? 'Kapal Ferry Penyeberangan' : 'Angkutan Darat');
-}
-
-function getTransportIcon(type) {
-  if (type === 'ferry') return '🚢';
-  if (type === 'traditional_boat') return '⛵';
-  if (type === 'speedboat') return '🚤';
-  return '🚐';
+  return getTransportMeta(type).label;
 }
 
 const filteredRoutes = computed(() => {

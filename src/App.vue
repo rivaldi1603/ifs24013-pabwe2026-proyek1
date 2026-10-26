@@ -11,10 +11,24 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
 import ToastContainer from './components/common/ToastContainer.vue';
 import ConfirmModal from './components/common/ConfirmModal.vue';
+import { initAuthSync } from './composables/useAuth.js';
+
+let disposeAuthSync;
+
+onMounted(() => {
+  disposeAuthSync = initAuthSync();
+});
+
+onUnmounted(() => {
+  if (typeof disposeAuthSync === 'function') {
+    disposeAuthSync();
+  }
+});
 </script>
 
 <style scoped>

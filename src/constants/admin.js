@@ -85,16 +85,4 @@ export const HALAL_STATUS_OPTIONS = Object.freeze([
   { value: 'Non-Halal', label: 'Non-Halal (Tradisional Khas)' }
 ]);
 
-export const TRANSPORT_TYPES = Object.freeze({
-  FERRY: 'ferry',
-  TRADITIONAL_BOAT: 'traditional_boat',
-  SPEEDBOAT: 'speedboat',
-  LAND_SHUTTLE: 'land_shuttle'
-});
-
-export const TRANSPORT_TYPE_OPTIONS = Object.freeze([
-  { value: TRANSPORT_TYPES.FERRY, label: '🚢 Kapal Ferry ASDP (KMP)', badgeClass: 'badge-role-admin' },
-  { value: TRANSPORT_TYPES.TRADITIONAL_BOAT, label: '⛵ Kapal Tradisional Kayu', badgeClass: 'badge-role-partner' },
-  { value: TRANSPORT_TYPES.SPEEDBOAT, label: '🚤 Speedboat Cepat', badgeClass: 'badge-role-partner' },
-  { value: TRANSPORT_TYPES.LAND_SHUTTLE, label: '🚐 Angkutan Darat / Travel Shuttle', badgeClass: 'badge-role-user' }
-]);
+export * from './transport.js';

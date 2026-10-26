@@ -1,5 +1,6 @@
 import { getStoredToken, getStoredUser } from '../constants/storage.js';
 import { createRouter, createWebHistory } from 'vue-router';
+import { ensureSession, useAuth } from '../composables/useAuth.js';
 
 const HomeView = () => import('../views/HomeView.vue');
 const LoginView = () => import('../views/LoginView.vue');
@@ -56,7 +57,6 @@ const routes = [
   },
   {
     path: '/auth/register',
-    alias: ['/auth/regiter'],
     name: 'register',
     component: LoginView,
     meta: { guestOnly: true }
@@ -64,7 +64,6 @@ const routes = [
   // Legacy paths -> canonical auth paths (query such as ?redirect= is preserved)
   { path: '/login', redirect: to => ({ path: '/auth/login', query: to.query }) },
   { path: '/register', redirect: to => ({ path: '/auth/register', query: to.query }) },
-  { path: '/regiter', redirect: to => ({ path: '/auth/regiter', query: to.query }) },
   { path: '/auth', redirect: '/auth/login' },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];
@@ -76,12 +75,13 @@ const router = createRouter({
 
 function resolveSession() {
   const token = getStoredToken();
-  const user = getStoredUser();
+  const { currentUser } = useAuth();
+  const user = currentUser.value || getStoredUser();
   return { token, user };
 }
 
 function checkAuthRedirect(to, token, user) {
-  if (to.meta.requiresAuth) {
+  if (to.meta?.requiresAuth) {
     if (!token || !user) {
       return { path: '/auth/login', query: { redirect: to.fullPath } };
     }
@@ -90,15 +90,18 @@ function checkAuthRedirect(to, token, user) {
     }
   }
 
-  if (to.meta.guestOnly && token && user) {
+  if (to.meta?.guestOnly && token && user) {
     return user.role === 'admin' ? { path: '/admin' } : { path: '/profil' };
   }
 
   return null;
 }
 
-// Navigation Guard
-router.beforeEach((to, from, next) => {
+// Navigation Guard with server session verification
+router.beforeEach(async (to, from, next) => {
+  if (to.meta?.requiresAuth || to.meta?.guestOnly) {
+    await ensureSession();
+  }
   const { token, user } = resolveSession();
   const redirectTarget = checkAuthRedirect(to, token, user);
   if (redirectTarget) {
@@ -109,4 +112,3 @@ router.beforeEach((to, from, next) => {
 
 export { checkAuthRedirect, resolveSession, routes };
 export default router;
-

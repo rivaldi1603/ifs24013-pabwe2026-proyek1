@@ -10,6 +10,7 @@
       :style="{ '--modal-max-w': maxWidth }"
       open
       aria-labelledby="modal-title-heading"
+      @keydown.esc="close"
     >
       <div class="modal-header">
         <slot name="header">

@@ -2,10 +2,12 @@ import { ref } from 'vue';
 import {
   getStoredUser,
   setStoredUser,
+  getStoredToken,
   setStoredToken,
   clearStoredAuth,
   syncStoredUser
 } from '../constants/storage.js';
+import { api } from '../api.js';
 
 /**
  * Shared reactive user state across the entire application.
@@ -29,7 +31,6 @@ function loadUserFromStorage() {
 function handleUnauthorized() {
   clearStoredAuth();
   currentUser.value = null;
-  globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
 }
 
 /**
@@ -54,9 +55,64 @@ export function removeAuthListeners() {
   }
 }
 
+/**
+ * Initializes auth listeners and returns a cleanup disposer function.
+ * Recommended to be called inside App.vue onMounted and disposed onUnmounted.
+ * @returns {() => void} Cleanup disposer function
+ */
+export function initAuthSync() {
+  setupAuthListeners();
+  loadUserFromStorage();
+  return () => {
+    removeAuthListeners();
+  };
+}
+
 // Initial bootstrap
 loadUserFromStorage();
 setupAuthListeners();
+
+let sessionPromise = null;
+
+/**
+ * Verifies session against backend server (/auth/me) to ensure client-side
+ * role guards cannot be tampered with via local storage.
+ * Deduplicates concurrent calls.
+ * @returns {Promise<object|null>}
+ */
+export function ensureSession() {
+  const token = getStoredToken();
+  if (!token) {
+    currentUser.value = null;
+    return Promise.resolve(null);
+  }
+
+  if (sessionPromise) {
+    return sessionPromise;
+  }
+
+  sessionPromise = api.getMe()
+    .then((res) => {
+      if (res && res.success && (res.user || res.data)) {
+        const verifiedUser = res.user || res.data;
+        currentUser.value = verifiedUser;
+        setStoredUser(verifiedUser, false);
+        return verifiedUser;
+      }
+      clearStoredAuth();
+      currentUser.value = null;
+      return null;
+    })
+    .catch((err) => {
+      console.warn('Session verification fallback:', err);
+      return currentUser.value;
+    })
+    .finally(() => {
+      sessionPromise = null;
+    });
+
+  return sessionPromise;
+}
 
 /**
  * Authentication Composable (useAuth)
@@ -94,7 +150,10 @@ export function useAuth() {
     logoutUser,
     loadUserFromStorage,
     setupAuthListeners,
-    removeAuthListeners
+    removeAuthListeners,
+    initAuthSync,
+    ensureSession
   };
 }
 
+export default useAuth;

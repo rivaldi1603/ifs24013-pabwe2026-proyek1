@@ -33,10 +33,8 @@ if (cssMatch) {
 const routes = [
   'auth/login',
   'auth/register',
-  'auth/regiter',
   'login',
   'register',
-  'regiter',
   'dashboard',
   'profil',
   'profile',
