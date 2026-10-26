@@ -1,3 +1,4 @@
+import { getStoredToken, getStoredUser } from '../constants/storage.js';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const HomeView = () => import('../views/HomeView.vue');
@@ -73,19 +74,8 @@ const router = createRouter({
   routes
 });
 
-function getStoredUser() {
-  const userStr = localStorage.getItem('jt_user') || sessionStorage.getItem('jt_user');
-  if (!userStr) return null;
-  try {
-    return JSON.parse(userStr);
-  } catch (e) {
-    console.error('Failed to parse user session in router:', e);
-    return null;
-  }
-}
-
 function resolveSession() {
-  const token = sessionStorage.getItem('jt_token') || localStorage.getItem('jt_token');
+  const token = getStoredToken();
   const user = getStoredUser();
   return { token, user };
 }

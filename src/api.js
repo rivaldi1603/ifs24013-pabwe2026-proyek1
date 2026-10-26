@@ -1,3 +1,4 @@
+import { getStoredToken, clearStoredAuth } from './constants/storage.js';
 function resolveApiBaseUrl() {
   const envUrl = import.meta.env?.VITE_API_BASE_URL;
   let url = typeof envUrl === 'string' && envUrl.trim()
@@ -20,7 +21,7 @@ function getHeaders(includeAuth = false) {
     'Content-Type': 'application/json'
   };
   if (includeAuth) {
-    const token = localStorage.getItem('jt_token') || sessionStorage.getItem('jt_token');
+    const token = getStoredToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -75,10 +76,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
   }
 
   if (auth && (res.status === 401 || res.status === 403)) {
-    sessionStorage.removeItem('jt_token');
-    localStorage.removeItem('jt_token');
-    sessionStorage.removeItem('jt_user');
-    localStorage.removeItem('jt_user');
+    clearStoredAuth();
     globalThis.dispatchEvent(new CustomEvent('jt:unauthorized'));
   }
 

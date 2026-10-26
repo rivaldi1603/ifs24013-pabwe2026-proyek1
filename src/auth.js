@@ -1,21 +1,20 @@
 import { ref } from 'vue';
+import {
+  STORAGE_KEYS,
+  getStoredUser,
+  setStoredUser,
+  setStoredToken,
+  clearStoredAuth,
+  syncStoredUser
+} from './constants/storage.js';
 
 const currentUser = ref(null);
 
 function loadUserFromStorage() {
-  const stored = localStorage.getItem('jt_user') || sessionStorage.getItem('jt_user');
-  if (stored) {
-    try {
-      currentUser.value = JSON.parse(stored);
-      if (!localStorage.getItem('jt_user')) {
-        localStorage.setItem('jt_user', stored);
-      }
-    } catch (e) {
-      console.error('Failed to parse user from storage:', e);
-      currentUser.value = null;
-    }
-  } else {
-    currentUser.value = null;
+  const user = getStoredUser();
+  currentUser.value = user;
+  if (user) {
+    syncStoredUser(user);
   }
 }
 
@@ -24,10 +23,7 @@ loadUserFromStorage();
 globalThis.addEventListener('storage', loadUserFromStorage);
 globalThis.addEventListener('jt:auth-change', loadUserFromStorage);
 globalThis.addEventListener('jt:unauthorized', () => {
-  sessionStorage.removeItem('jt_token');
-  localStorage.removeItem('jt_token');
-  sessionStorage.removeItem('jt_user');
-  localStorage.removeItem('jt_user');
+  clearStoredAuth();
   currentUser.value = null;
   globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
 });
@@ -36,21 +32,16 @@ export function useAuth() {
   function setUser(userData, token) {
     if (userData) {
       if (token) {
-        sessionStorage.setItem('jt_token', token);
+        setStoredToken(token);
       }
-      const serialized = JSON.stringify(userData);
-      sessionStorage.setItem('jt_user', serialized);
-      localStorage.setItem('jt_user', serialized);
+      setStoredUser(userData);
       currentUser.value = userData;
       globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
     }
   }
 
   function logoutUser() {
-    sessionStorage.removeItem('jt_token');
-    localStorage.removeItem('jt_token');
-    sessionStorage.removeItem('jt_user');
-    localStorage.removeItem('jt_user');
+    clearStoredAuth();
     currentUser.value = null;
     globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
   }

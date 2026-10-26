@@ -531,6 +531,9 @@ import { ref, shallowRef, computed, onMounted, watch } from 'vue';
 import { api } from '../api';
 import { useAuth } from '../auth';
 import { formatServiceType } from '../utils/formatters';
+import { useAdminCrud } from '../composables/useAdminCrud';
+import { useToast } from '../composables/useToast';
+import { useConfirm } from '../composables/useConfirm';
 import DestinationModal from '../components/admin/DestinationModal.vue';
 import ServiceModal from '../components/admin/ServiceModal.vue';
 import TransportModal from '../components/admin/TransportModal.vue';
@@ -538,46 +541,188 @@ import CulinaryModal from '../components/admin/CulinaryModal.vue';
 import ArticleModal from '../components/admin/ArticleModal.vue';
 
 const { currentUser: user } = useAuth();
-
-// Datasets (using shallowRef to minimize deep reactive proxy overhead)
-const destinations = shallowRef([]);
-const services = shallowRef([]);
-const transportRoutes = shallowRef([]);
-const culinaryItems = shallowRef([]);
-const articles = shallowRef([]);
-const allReviews = shallowRef([]);
-const usersList = shallowRef([]);
-const regencies = shallowRef([]);
-const categories = shallowRef([]);
+const { confirm } = useConfirm();
+const { success: toastSuccess, error: toastError } = useToast();
 
 // Active tab
 const currentTab = ref('destinations');
 
-// Search states
-const destSearch = ref('');
-const serviceSearch = ref('');
-const transportSearch = ref('');
-const culinarySearch = ref('');
-const articleSearch = ref('');
+// Master references
+const regencies = shallowRef([]);
+const categories = shallowRef([]);
+const allReviews = shallowRef([]);
+const usersList = shallowRef([]);
 const reviewSearch = ref('');
 const userSearch = ref('');
 
-// Modals states
-const saving = ref(false);
-const destModalOpen = ref(false);
-const serviceModalOpen = ref(false);
-const transportModalOpen = ref(false);
-const culinaryModalOpen = ref(false);
-const articleModalOpen = ref(false);
+// 1. Destinations CRUD Composable
+const destCrud = useAdminCrud({
+  entityLabel: 'Destinasi',
+  fetchFn: () => api.getDestinations({ limit: 50 }),
+  createFn: api.createDestination,
+  updateFn: api.updateDestination,
+  deleteFn: api.deleteDestination,
+  defaultForm: () => ({
+    id: null,
+    name: '',
+    category_id: categories.value[0]?.id || 1,
+    regency_id: regencies.value[0]?.id || 1,
+    price_display: 'Gratis',
+    operational_hours: '08.00 - 18.00 WIB',
+    address: '',
+    image_url: '',
+    description: '',
+    is_community_managed: false
+  }),
+  filterFn: (d, q) => d.name.toLowerCase().includes(q) || (d.address && d.address.toLowerCase().includes(q))
+});
 
-// Forms
-const destForm = ref({ id: null, name: '', category_id: 1, regency_id: 1, price_display: 'Gratis', operational_hours: '08.00 - 18.00 WIB', address: '', image_url: '', description: '', is_community_managed: false });
-const serviceForm = ref({ id: null, name: '', provider_name: '', service_type: 'cultural_experience', category_id: 4, regency_id: 1, contact_wa: '', price_display: '', price_unit: '', description: '' });
-const transportForm = ref({ id: null, name: '', transport_type: 'ferry', route_direction: '', vehicle_type: 'Kapal Ferry KMP', departure_hours: '', price_display: '', description: '', operator: 'ASDP / Swasta', contact: '' });
-const culinaryForm = ref({ id: null, name: '', halal_status: 'Halal', origin_region: 'Danau Toba', description: '', image_url: '' });
-const articleForm = ref({ id: null, title: '', regency_id: null, published_at: new Date().toISOString().split('T')[0], source_url: '', summary: '' });
+// 2. Services CRUD Composable
+const serviceCrud = useAdminCrud({
+  entityLabel: 'Layanan Jasa',
+  fetchFn: () => api.getServices({ limit: 50 }),
+  createFn: api.createService,
+  updateFn: api.updateService,
+  deleteFn: api.deleteService,
+  defaultForm: () => ({
+    id: null,
+    name: '',
+    provider_name: '',
+    service_type: 'cultural_experience',
+    category_id: 4,
+    regency_id: regencies.value[0]?.id || 1,
+    contact_wa: '',
+    price_display: 'Rp 50.000',
+    price_unit: 'per orang',
+    description: ''
+  }),
+  filterFn: (s, q) => s.name.toLowerCase().includes(q) || s.provider_name.toLowerCase().includes(q)
+});
 
-// 1. Initial data for default active tab (Destinations)
+// 3. Transport CRUD Composable
+const transportCrud = useAdminCrud({
+  entityLabel: 'Rute Transportasi',
+  fetchFn: api.getTransport,
+  createFn: api.createTransport,
+  updateFn: api.updateTransport,
+  deleteFn: api.deleteTransport,
+  defaultForm: () => ({
+    id: null,
+    name: '',
+    transport_type: 'ferry',
+    route_direction: '',
+    vehicle_type: 'Kapal Ferry KMP',
+    departure_hours: 'Setiap 1 Jam',
+    price_display: 'Rp 15.000 / orang',
+    description: '',
+    operator: 'ASDP Indonesia Ferry',
+    contact: ''
+  }),
+  filterFn: (t, q) => t.name.toLowerCase().includes(q) || t.route_direction.toLowerCase().includes(q)
+});
+
+// 4. Culinary CRUD Composable
+const culinaryCrud = useAdminCrud({
+  entityLabel: 'Menu Kuliner',
+  fetchFn: api.getCulinary,
+  createFn: api.createCulinary,
+  updateFn: api.updateCulinary,
+  deleteFn: api.deleteCulinary,
+  defaultForm: () => ({
+    id: null,
+    name: '',
+    halal_status: 'Halal',
+    origin_region: 'Danau Toba',
+    description: '',
+    image_url: ''
+  }),
+  filterFn: (c, q) => c.name.toLowerCase().includes(q) || (c.origin_region && c.origin_region.toLowerCase().includes(q))
+});
+
+// 5. Articles CRUD Composable
+const articleCrud = useAdminCrud({
+  entityLabel: 'Cerita Toba',
+  fetchFn: api.getArticles,
+  createFn: api.createArticle,
+  updateFn: api.updateArticle,
+  deleteFn: api.deleteArticle,
+  defaultForm: () => ({
+    id: null,
+    title: '',
+    regency_id: null,
+    published_at: new Date().toISOString().split('T')[0],
+    source_url: '',
+    summary: ''
+  }),
+  filterFn: (a, q) => a.title.toLowerCase().includes(q) || (a.summary && a.summary.toLowerCase().includes(q))
+});
+
+// Template State Aliases for Seamless Backward Compatibility
+const destinations = destCrud.items;
+const destSearch = destCrud.searchQuery;
+const filteredDestinations = destCrud.filteredItems;
+const destModalOpen = destCrud.modalOpen;
+const destForm = destCrud.form;
+const openAddDestinationModal = () => destCrud.openAdd();
+const editDestination = (d) => destCrud.openEdit({ ...d, is_community_managed: Boolean(d.is_community_managed) });
+const saveDestination = () => destCrud.save();
+const deleteDest = (id, name) => destCrud.remove(id, name);
+const loadDestinations = () => destCrud.load();
+
+const services = serviceCrud.items;
+const serviceSearch = serviceCrud.searchQuery;
+const filteredServices = serviceCrud.filteredItems;
+const serviceModalOpen = serviceCrud.modalOpen;
+const serviceForm = serviceCrud.form;
+const openAddServiceModal = () => serviceCrud.openAdd();
+const editService = (s) => serviceCrud.openEdit(s);
+const saveService = () => serviceCrud.save();
+const deleteServ = (id, name) => serviceCrud.remove(id, name);
+const loadServices = () => serviceCrud.load();
+
+const transportRoutes = transportCrud.items;
+const transportSearch = transportCrud.searchQuery;
+const filteredTransport = transportCrud.filteredItems;
+const transportModalOpen = transportCrud.modalOpen;
+const transportForm = transportCrud.form;
+const openAddTransportModal = () => transportCrud.openAdd();
+const editTransport = (t) => transportCrud.openEdit(t);
+const saveTransport = () => transportCrud.save();
+const deleteTrans = (id, name) => transportCrud.remove(id, name);
+const loadTransport = () => transportCrud.load();
+
+const culinaryItems = culinaryCrud.items;
+const culinarySearch = culinaryCrud.searchQuery;
+const filteredCulinary = culinaryCrud.filteredItems;
+const culinaryModalOpen = culinaryCrud.modalOpen;
+const culinaryForm = culinaryCrud.form;
+const openAddCulinaryModal = () => culinaryCrud.openAdd();
+const editCulinary = (c) => culinaryCrud.openEdit(c);
+const saveCulinary = () => culinaryCrud.save();
+const deleteCulin = (id, name) => culinaryCrud.remove(id, name);
+const loadCulinary = () => culinaryCrud.load();
+
+const articles = articleCrud.items;
+const articleSearch = articleCrud.searchQuery;
+const filteredArticles = articleCrud.filteredItems;
+const articleModalOpen = articleCrud.modalOpen;
+const articleForm = articleCrud.form;
+const openAddArticleModal = () => articleCrud.openAdd();
+const editArticle = (a) => articleCrud.openEdit(a);
+const saveArticle = () => articleCrud.save();
+const deleteArtic = (id, title) => articleCrud.remove(id, title);
+const loadArticles = () => articleCrud.load();
+
+// Global saving state across any modal
+const saving = computed(() =>
+  destCrud.saving.value ||
+  serviceCrud.saving.value ||
+  transportCrud.saving.value ||
+  culinaryCrud.saving.value ||
+  articleCrud.saving.value
+);
+
+// Initial bootstrap
 async function loadInitialData() {
   try {
     const [destRes, regRes, catRes] = await Promise.all([
@@ -585,51 +730,25 @@ async function loadInitialData() {
       api.getRegencies(),
       api.getCategories()
     ]);
-    if (destRes.success) destinations.value = destRes.data || [];
-    if (regRes.success) regencies.value = regRes.data || [];
-    if (catRes.success) categories.value = catRes.data || [];
+    if (destRes?.success) destinations.value = destRes.data || [];
+    if (regRes?.success) regencies.value = regRes.data || [];
+    if (catRes?.success) categories.value = catRes.data || [];
   } catch (err) {
     console.error('Error loading initial admin data:', err);
   }
 }
 
-// Specific fetchers for on-demand loading and updates
-async function loadDestinations() {
-  const destRes = await api.getDestinations({ limit: 50 });
-  if (destRes.success) destinations.value = destRes.data || [];
-}
-
-async function loadServices() {
-  const res = await api.getServices({ limit: 50 });
-  if (res.success) services.value = res.data || [];
-}
-
-async function loadTransport() {
-  const res = await api.getTransport();
-  if (res.success) transportRoutes.value = res.data || [];
-}
-
-async function loadCulinary() {
-  const res = await api.getCulinary();
-  if (res.success) culinaryItems.value = res.data || [];
-}
-
-async function loadArticles() {
-  const res = await api.getArticles();
-  if (res.success) articles.value = res.data || [];
-}
-
 async function loadReviews() {
   const res = await api.getReviews({ limit: 50 });
-  if (res.success) allReviews.value = res.data || [];
+  if (res?.success) allReviews.value = res.data || [];
 }
 
 async function loadUsers() {
   const res = await api.getUsers();
-  if (res.success) usersList.value = res.data || [];
+  if (res?.success) usersList.value = res.data || [];
 }
 
-// On-demand load data when tabs are clicked
+// On-demand tab loading
 watch(currentTab, async (tab) => {
   if (tab === 'services' && services.value.length === 0) {
     await loadServices();
@@ -646,170 +765,45 @@ watch(currentTab, async (tab) => {
   }
 });
 
-// Filtered lists
-const filteredDestinations = computed(() => {
-  if (!destSearch.value.trim()) return destinations.value;
-  const q = destSearch.value.toLowerCase();
-  return destinations.value.filter(d => d.name.toLowerCase().includes(q) || (d.address && d.address.toLowerCase().includes(q)));
-});
-
-const filteredServices = computed(() => {
-  if (!serviceSearch.value.trim()) return services.value;
-  const q = serviceSearch.value.toLowerCase();
-  return services.value.filter(s => s.name.toLowerCase().includes(q) || s.provider_name.toLowerCase().includes(q));
-});
-
-const filteredTransport = computed(() => {
-  if (!transportSearch.value.trim()) return transportRoutes.value;
-  const q = transportSearch.value.toLowerCase();
-  return transportRoutes.value.filter(t => t.name.toLowerCase().includes(q) || t.route_direction.toLowerCase().includes(q));
-});
-
-const filteredCulinary = computed(() => {
-  if (!culinarySearch.value.trim()) return culinaryItems.value;
-  const q = culinarySearch.value.toLowerCase();
-  return culinaryItems.value.filter(c => c.name.toLowerCase().includes(q) || (c.origin_region && c.origin_region.toLowerCase().includes(q)));
-});
-
-const filteredArticles = computed(() => {
-  if (!articleSearch.value.trim()) return articles.value;
-  const q = articleSearch.value.toLowerCase();
-  return articles.value.filter(a => a.title.toLowerCase().includes(q) || (a.summary && a.summary.toLowerCase().includes(q)));
-});
-
 const filteredReviews = computed(() => {
-  if (!reviewSearch.value.trim()) return allReviews.value;
-  const q = reviewSearch.value.toLowerCase();
-  return allReviews.value.filter(r => (r.reviewer_name && r.reviewer_name.toLowerCase().includes(q)) || (r.review_text && r.review_text.toLowerCase().includes(q)));
+  const q = reviewSearch.value.trim().toLowerCase();
+  if (!q) return allReviews.value;
+  return allReviews.value.filter(r =>
+    (r.reviewer_name && r.reviewer_name.toLowerCase().includes(q)) ||
+    (r.review_text && r.review_text.toLowerCase().includes(q))
+  );
 });
 
 const filteredUsersList = computed(() => {
-  if (!userSearch.value.trim()) return usersList.value;
-  const q = userSearch.value.toLowerCase();
-  return usersList.value.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  const q = userSearch.value.trim().toLowerCase();
+  if (!q) return usersList.value;
+  return usersList.value.filter(u =>
+    u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+  );
 });
 
-
-// 1. Destinations
-function openAddDestinationModal() {
-  destForm.value = { id: null, name: '', category_id: categories.value[0]?.id || 1, regency_id: regencies.value[0]?.id || 1, price_display: 'Gratis', operational_hours: '08.00 - 18.00 WIB', address: '', image_url: '', description: '', is_community_managed: false };
-  destModalOpen.value = true;
-}
-function editDestination(d) {
-  destForm.value = { ...d, is_community_managed: !!d.is_community_managed };
-  destModalOpen.value = true;
-}
-async function saveDestination() {
-  saving.value = true;
-  try {
-    const res = destForm.value.id ? await api.updateDestination(destForm.value.id, destForm.value) : await api.createDestination(destForm.value);
-    if (res.success) { destModalOpen.value = false; await loadDestinations(); alert('Destinasi berhasil disimpan!'); }
-    else alert(res.message || 'Gagal menyimpan.');
-  } finally { saving.value = false; }
-}
-async function deleteDest(id, name) {
-  if (!confirm(`Hapus destinasi "${name}"?`)) return;
-  const res = await api.deleteDestination(id);
-  if (res.success) { await loadDestinations(); alert('Destinasi berhasil dihapus.'); }
-}
-
-// 2. Services
-function openAddServiceModal() {
-  serviceForm.value = { id: null, name: '', provider_name: '', service_type: 'cultural_experience', category_id: 4, regency_id: regencies.value[0]?.id || 1, contact_wa: '', price_display: 'Rp 50.000', price_unit: 'per orang', description: '' };
-  serviceModalOpen.value = true;
-}
-function editService(s) {
-  serviceForm.value = { ...s };
-  serviceModalOpen.value = true;
-}
-async function saveService() {
-  saving.value = true;
-  try {
-    const res = serviceForm.value.id ? await api.updateService(serviceForm.value.id, serviceForm.value) : await api.createService(serviceForm.value);
-    if (res.success) { serviceModalOpen.value = false; await loadServices(); alert('Layanan berhasil disimpan!'); }
-    else alert(res.message || 'Gagal menyimpan.');
-  } finally { saving.value = false; }
-}
-async function deleteServ(id, name) {
-  if (!confirm(`Hapus layanan "${name}"?`)) return;
-  const res = await api.deleteService(id);
-  if (res.success) { await loadServices(); alert('Layanan berhasil dihapus.'); }
-}
-
-// 3. Transport
-function openAddTransportModal() {
-  transportForm.value = { id: null, name: '', transport_type: 'ferry', route_direction: '', vehicle_type: 'Kapal Ferry KMP', departure_hours: 'Setiap 1 Jam', price_display: 'Rp 15.000 / orang', description: '', operator: 'ASDP Indonesia Ferry', contact: '' };
-  transportModalOpen.value = true;
-}
-function editTransport(t) {
-  transportForm.value = { ...t };
-  transportModalOpen.value = true;
-}
-async function saveTransport() {
-  saving.value = true;
-  try {
-    const res = transportForm.value.id ? await api.updateTransport(transportForm.value.id, transportForm.value) : await api.createTransport(transportForm.value);
-    if (res.success) { transportModalOpen.value = false; await loadTransport(); alert('Rute transportasi berhasil disimpan!'); }
-    else alert(res.message || 'Gagal menyimpan.');
-  } finally { saving.value = false; }
-}
-async function deleteTrans(id, name) {
-  if (!confirm(`Hapus rute "${name}"?`)) return;
-  const res = await api.deleteTransport(id);
-  if (res.success) { await loadTransport(); alert('Rute transportasi berhasil dihapus.'); }
-}
-
-// 4. Culinary
-function openAddCulinaryModal() {
-  culinaryForm.value = { id: null, name: '', halal_status: 'Halal', origin_region: 'Danau Toba', description: '', image_url: '' };
-  culinaryModalOpen.value = true;
-}
-function editCulinary(c) {
-  culinaryForm.value = { ...c };
-  culinaryModalOpen.value = true;
-}
-async function saveCulinary() {
-  saving.value = true;
-  try {
-    const res = culinaryForm.value.id ? await api.updateCulinary(culinaryForm.value.id, culinaryForm.value) : await api.createCulinary(culinaryForm.value);
-    if (res.success) { culinaryModalOpen.value = false; await loadCulinary(); alert('Menu kuliner berhasil disimpan!'); }
-    else alert(res.message || 'Gagal menyimpan.');
-  } finally { saving.value = false; }
-}
-async function deleteCulin(id, name) {
-  if (!confirm(`Hapus menu kuliner "${name}"?`)) return;
-  const res = await api.deleteCulinary(id);
-  if (res.success) { await loadCulinary(); alert('Menu kuliner berhasil dihapus.'); }
-}
-
-// 5. Articles
-function openAddArticleModal() {
-  articleForm.value = { id: null, title: '', regency_id: null, published_at: new Date().toISOString().split('T')[0], source_url: '', summary: '' };
-  articleModalOpen.value = true;
-}
-function editArticle(a) {
-  articleForm.value = { ...a };
-  articleModalOpen.value = true;
-}
-async function saveArticle() {
-  saving.value = true;
-  try {
-    const res = articleForm.value.id ? await api.updateArticle(articleForm.value.id, articleForm.value) : await api.createArticle(articleForm.value);
-    if (res.success) { articleModalOpen.value = false; await loadArticles(); alert('Cerita Toba berhasil disimpan!'); }
-    else alert(res.message || 'Gagal menyimpan.');
-  } finally { saving.value = false; }
-}
-async function deleteArtic(id, title) {
-  if (!confirm(`Hapus artikel "${title}"?`)) return;
-  const res = await api.deleteArticle(id);
-  if (res.success) { await loadArticles(); alert('Artikel berhasil dihapus.'); }
-}
-
-// 6. Reviews
 async function handleDeleteReview(id) {
-  if (!confirm(`Hapus ulasan #${id}?`)) return;
-  const res = await api.deleteReview(id);
-  if (res.success) { await loadReviews(); alert('Ulasan berhasil dihapus.'); }
+  const confirmed = await confirm({
+    title: 'Hapus Ulasan',
+    message: `Apakah Anda yakin ingin menghapus ulasan #${id}? Tindakan ini permanen.`,
+    confirmText: 'Ya, Hapus',
+    cancelText: 'Batal',
+    danger: true
+  });
+  if (!confirmed) return;
+
+  try {
+    const res = await api.deleteReview(id);
+    if (res?.success) {
+      await loadReviews();
+      toastSuccess(`Ulasan #${id} berhasil dihapus.`);
+    } else {
+      toastError(res?.message || 'Gagal menghapus ulasan.');
+    }
+  } catch (err) {
+    console.error('Error deleting review:', err);
+    toastError('Terjadi kesalahan saat menghapus ulasan.');
+  }
 }
 
 onMounted(() => {

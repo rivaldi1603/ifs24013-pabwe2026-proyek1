@@ -124,7 +124,7 @@ describe('formatters utility unit tests', () => {
     it('generates a session id with jt_ prefix', () => {
       const id = generateSessionId();
       expect(typeof id).toBe('string');
-      expect(id.startsWith('jt_')).toBe(true);
+      expect(id.startsWith('session_')).toBe(true);
     });
   });
 });

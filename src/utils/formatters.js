@@ -60,5 +60,5 @@ export function getEstimatedPrice(min, max, unit = '') {
 }
 
 export function generateSessionId() {
-  return 'jt_' + Math.random().toString(36).substring(2, 9);
+  return 'session_' + Math.random().toString(36).substring(2, 9);
 }

@@ -5,12 +5,16 @@
       <router-view />
     </main>
     <Footer />
+    <ToastContainer />
+    <ConfirmModal />
   </div>
 </template>
 
 <script setup>
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import ToastContainer from './components/common/ToastContainer.vue';
+import ConfirmModal from './components/common/ConfirmModal.vue';
 </script>
 
 <style scoped>
@@ -24,5 +28,4 @@ import Footer from './components/Footer.vue';
   flex: 1;
   min-height: calc(100vh - 74px);
 }
-
 </style>
