@@ -1,5 +1,5 @@
 <template>
-  <div class="toast-container" role="region" aria-label="Notifikasi Aplikasi" aria-live="polite">
+  <section class="toast-container" aria-label="Notifikasi Aplikasi" aria-live="polite">
     <TransitionGroup name="toast-fade">
       <div
         v-for="toast in toasts"
@@ -25,7 +25,7 @@
         </button>
       </div>
     </TransitionGroup>
-  </div>
+  </section>
 </template>
 
 <script setup>

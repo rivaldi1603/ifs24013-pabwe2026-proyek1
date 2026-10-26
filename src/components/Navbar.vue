@@ -132,7 +132,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const mobileMenuOpen = ref(false);

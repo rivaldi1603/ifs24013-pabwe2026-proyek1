@@ -11,10 +11,13 @@
  *      could theoretically inspect and exfiltrate credentials stored in localStorage/sessionStorage.
  *
  * 2. Mitigations Implemented in JelajahToba:
+ *    - In-Memory Token Cache: The active token is cached in an in-memory variable (`inMemoryToken`)
+ *      to avoid repeated disk/storage reads and provide fast, safe accessor routines.
+ *    - Automatic Expiration Checking: Tokens are validated for expiration (`isTokenExpired`)
+ *      upon retrieval; expired tokens are immediately purged rather than being sent to the backend.
+ *    - Token Format Validation: Only syntactically well-formed token strings are accepted (`isValidTokenFormat`).
  *    - Session-first Token Storage: Tokens are prioritized in `sessionStorage` so they are
- *      automatically cleared when the browser window/tab is closed, mitigating persistence risks.
- *    - Safe Navigation & Sanitization: Navigation redirects use `safeRedirect` to prevent Open Redirect
- *      and XSS injection vectors.
+ *      automatically cleared when the browser window/tab is closed.
  *    - Centralized Accessors: All storage interactions are routed through this module, eliminating
  *      magic strings and allowing easy transition to secure storage engines.
  *
@@ -31,33 +34,102 @@ export const STORAGE_KEYS = Object.freeze({
 });
 
 /**
- * Retrieves the stored JWT token, checking sessionStorage first then localStorage fallback.
- * @returns {string|null}
+ * In-memory token cache for runtime isolation and fast access.
  */
-export function getStoredToken() {
-  if (typeof globalThis.sessionStorage === 'undefined') return null;
-  return sessionStorage.getItem(STORAGE_KEYS.TOKEN) || (typeof globalThis.localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.TOKEN) : null) || null;
+let inMemoryToken = null;
+
+/**
+ * Validates basic token string format (non-empty, reasonable length, no whitespace/injection).
+ * @param {string} token
+ * @returns {boolean}
+ */
+export function isValidTokenFormat(token) {
+  if (typeof token !== 'string') return false;
+  const trimmed = token.trim();
+  if (trimmed.length < 3 || trimmed.length > 4096) return false;
+  return !/[\s<>"']/.test(trimmed);
 }
 
 /**
- * Stores the JWT token in sessionStorage (and optionally localStorage if persist is requested).
+ * Safely parses the expiration timestamp from a JWT payload without external dependencies.
  * @param {string} token
- * @param {boolean} persist
+ * @returns {boolean} True if token is expired, false if still valid or unparseable
+ */
+export function isTokenExpired(token) {
+  if (!token || typeof token !== 'string') return true;
+  const parts = token.split('.');
+  if (parts.length === 3) {
+    try {
+      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const jsonStr = typeof globalThis.atob === 'function' ? globalThis.atob(payloadBase64) : null;
+      if (jsonStr) {
+        const payload = JSON.parse(jsonStr);
+        if (typeof payload.exp === 'number') {
+          return Date.now() >= payload.exp * 1000;
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Retrieves the stored JWT token, prioritizing in-memory cache, then sessionStorage, then localStorage.
+ * Automatically purges expired tokens.
+ * @returns {string|null}
+ */
+export function getStoredToken() {
+  if (inMemoryToken) {
+    if (isTokenExpired(inMemoryToken)) {
+      clearStoredAuth();
+      return null;
+    }
+    return inMemoryToken;
+  }
+
+  if (globalThis.sessionStorage === undefined) return null;
+
+  const sessionToken = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+  const localToken = globalThis.localStorage === undefined ? null : localStorage.getItem(STORAGE_KEYS.TOKEN);
+  const rawToken = sessionToken || localToken || null;
+
+  if (rawToken && isTokenExpired(rawToken)) {
+    clearStoredAuth();
+    return null;
+  }
+
+  inMemoryToken = rawToken;
+  return inMemoryToken;
+}
+
+/**
+ * Stores the JWT token in memory, sessionStorage (and optionally localStorage).
+ * @param {string|null} token
+ * @param {boolean} [persist=false]
  */
 export function setStoredToken(token, persist = false) {
-  if (typeof globalThis.sessionStorage === 'undefined') return;
-  if (!token) {
+  if (globalThis.sessionStorage === undefined) return;
+
+  if (token && isValidTokenFormat(token)) {
+    inMemoryToken = token;
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
+
+    if (globalThis.localStorage !== undefined) {
+      if (persist) {
+        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      }
+    }
+  } else {
+    inMemoryToken = null;
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
-    if (typeof globalThis.localStorage !== 'undefined') {
+    if (globalThis.localStorage !== undefined) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
     }
-    return;
-  }
-  sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
-  if (persist && typeof globalThis.localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-  } else if (typeof globalThis.localStorage !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
   }
 }
 
@@ -66,37 +138,48 @@ export function setStoredToken(token, persist = false) {
  * @returns {object|null}
  */
 export function getStoredUser() {
-  if (typeof globalThis.localStorage === 'undefined') return null;
-  const userStr = localStorage.getItem(STORAGE_KEYS.USER) || (typeof globalThis.sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_KEYS.USER) : null);
-  if (!userStr) return null;
-  try {
-    return JSON.parse(userStr);
-  } catch (err) {
-    console.error('Failed to parse user profile from storage:', err);
-    return null;
+  if (globalThis.localStorage === undefined) return null;
+
+  const localUser = localStorage.getItem(STORAGE_KEYS.USER);
+  const sessionUser = globalThis.sessionStorage === undefined ? null : sessionStorage.getItem(STORAGE_KEYS.USER);
+  const userStr = localUser || sessionUser || null;
+
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch (err) {
+      console.error('Failed to parse user profile from storage:', err);
+      return null;
+    }
   }
+  return null;
 }
 
 /**
  * Serializes and saves the user profile object to storage.
- * @param {object} user
- * @param {boolean} persist
+ * @param {object|null} user
+ * @param {boolean} [persist=true]
  */
 export function setStoredUser(user, persist = true) {
-  if (typeof globalThis.localStorage === 'undefined') return;
-  if (!user) {
-    if (typeof globalThis.sessionStorage !== 'undefined') {
+  if (user) {
+    const serialized = JSON.stringify(user);
+    if (globalThis.sessionStorage !== undefined) {
+      sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
+    }
+    if (globalThis.localStorage !== undefined) {
+      if (persist) {
+        localStorage.setItem(STORAGE_KEYS.USER, serialized);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.USER);
+      }
+    }
+  } else {
+    if (globalThis.sessionStorage !== undefined) {
       sessionStorage.removeItem(STORAGE_KEYS.USER);
     }
-    localStorage.removeItem(STORAGE_KEYS.USER);
-    return;
-  }
-  const serialized = JSON.stringify(user);
-  if (typeof globalThis.sessionStorage !== 'undefined') {
-    sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
-  }
-  if (persist) {
-    localStorage.setItem(STORAGE_KEYS.USER, serialized);
+    if (globalThis.localStorage !== undefined) {
+      localStorage.removeItem(STORAGE_KEYS.USER);
+    }
   }
 }
 
@@ -104,11 +187,14 @@ export function setStoredUser(user, persist = true) {
  * Clears all authentication credentials and user profile data from all storage scopes.
  */
 export function clearStoredAuth() {
-  if (typeof globalThis.sessionStorage !== 'undefined') {
+  inMemoryToken = null;
+
+  if (globalThis.sessionStorage !== undefined) {
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
     sessionStorage.removeItem(STORAGE_KEYS.USER);
   }
-  if (typeof globalThis.localStorage !== 'undefined') {
+
+  if (globalThis.localStorage !== undefined) {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
   }
@@ -116,10 +202,12 @@ export function clearStoredAuth() {
 
 /**
  * Ensures user profile present in sessionStorage is synchronized to localStorage.
+ * @param {object} user
  */
 export function syncStoredUser(user) {
-  if (!user || typeof globalThis.localStorage === 'undefined') return;
-  if (!localStorage.getItem(STORAGE_KEYS.USER)) {
-    setStoredUser(user, true);
+  if (user && globalThis.localStorage !== undefined) {
+    if (!localStorage.getItem(STORAGE_KEYS.USER)) {
+      setStoredUser(user, true);
+    }
   }
 }

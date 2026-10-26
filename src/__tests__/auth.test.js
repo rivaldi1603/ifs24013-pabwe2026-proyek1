@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useAuth } from '../auth.js';
+import { useAuth, getAuthInstance } from '../auth.js';
+import { useAuth as useAuthComposable } from '../composables/useAuth.js';
 
 describe('auth.js composable unit tests', () => {
   beforeEach(() => {
@@ -7,6 +8,15 @@ describe('auth.js composable unit tests', () => {
     sessionStorage.clear();
     const { logoutUser } = useAuth();
     logoutUser();
+  });
+
+  it('re-exports useAuth from auth.js matching composables/useAuth', () => {
+    expect(typeof useAuth).toBe('function');
+    expect(typeof useAuthComposable).toBe('function');
+    expect(getAuthInstance()).toBeDefined();
+    const directInstance = useAuth();
+    const composableInstance = useAuthComposable();
+    expect(directInstance.currentUser).toBe(composableInstance.currentUser);
   });
 
   it('initializes with null user when localStorage is empty', () => {

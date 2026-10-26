@@ -8,6 +8,7 @@ describe('useAdminCrud composable', () => {
   const mockCreate = vi.fn();
   const mockUpdate = vi.fn();
   const mockDelete = vi.fn();
+  const mockOnSuccess = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -23,11 +24,12 @@ describe('useAdminCrud composable', () => {
       updateFn: mockUpdate,
       deleteFn: mockDelete,
       defaultForm: () => ({ name: '', category_id: 1 }),
-      filterFn: (item, q) => item.name.toLowerCase().includes(q)
+      filterFn: (item, q) => item.name.toLowerCase().includes(q),
+      onSuccess: mockOnSuccess
     });
   }
 
-  it('initializes with default state values', () => {
+  it('initializes with default state values and supports closeModal', () => {
     const crud = createCrudInstance();
     expect(crud.items.value).toEqual([]);
     expect(crud.loading.value).toBe(false);
@@ -35,6 +37,10 @@ describe('useAdminCrud composable', () => {
     expect(crud.modalOpen.value).toBe(false);
     expect(crud.form.value).toEqual({ name: '', category_id: 1 });
     expect(crud.searchQuery.value).toBe('');
+
+    crud.modalOpen.value = true;
+    crud.closeModal();
+    expect(crud.modalOpen.value).toBe(false);
   });
 
   it('loads data successfully through fetchFn', async () => {
@@ -46,6 +52,14 @@ describe('useAdminCrud composable', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(crud.items.value).toEqual(sampleData);
+    expect(crud.loading.value).toBe(false);
+  });
+
+  it('handles load failure or exception gracefully', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+    const crud = createCrudInstance();
+    await crud.load();
+    expect(crud.items.value).toEqual([]);
     expect(crud.loading.value).toBe(false);
   });
 
@@ -78,6 +92,29 @@ describe('useAdminCrud composable', () => {
     expect(success).toBe(true);
     expect(mockCreate).toHaveBeenCalledWith({ name: 'Lumban Bulbul', category_id: 1 });
     expect(crud.modalOpen.value).toBe(false);
+    expect(mockOnSuccess).toHaveBeenCalledWith({ id: 10 });
+  });
+
+  it('handles save failure or API rejection', async () => {
+    mockCreate.mockResolvedValueOnce({ success: false, message: 'Invalid payload' });
+
+    const crud = createCrudInstance();
+    crud.openAdd({ name: 'Gagal Simpan' });
+    const success = await crud.save();
+
+    expect(success).toBe(false);
+    expect(crud.saving.value).toBe(false);
+  });
+
+  it('handles save exception gracefully', async () => {
+    mockCreate.mockRejectedValueOnce(new Error('Fatal API crash'));
+
+    const crud = createCrudInstance();
+    crud.openAdd({ name: 'Gagal Crash' });
+    const success = await crud.save();
+
+    expect(success).toBe(false);
+    expect(crud.saving.value).toBe(false);
   });
 
   it('updates existing item using updateFn when id is present', async () => {
@@ -109,7 +146,7 @@ describe('useAdminCrud composable', () => {
     expect(crud.filteredItems.value).toHaveLength(3);
   });
 
-  it('handles item deletion with confirmation', async () => {
+  it('handles item deletion when confirmed', async () => {
     const { confirmState, handleConfirm } = useConfirm();
     mockDelete.mockResolvedValueOnce({ success: true });
     mockFetch.mockResolvedValueOnce({ success: true, data: [] });
@@ -123,5 +160,31 @@ describe('useAdminCrud composable', () => {
     const result = await removePromise;
     expect(result).toBe(true);
     expect(mockDelete).toHaveBeenCalledWith(1);
+  });
+
+  it('aborts item deletion when cancelled', async () => {
+    const { confirmState, handleCancel } = useConfirm();
+
+    const crud = createCrudInstance();
+    const removePromise = crud.remove(2, 'Batal Hapus');
+
+    expect(confirmState.value.isOpen).toBe(true);
+    handleCancel();
+
+    const result = await removePromise;
+    expect(result).toBe(false);
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('handles delete failure or exception', async () => {
+    const { handleConfirm } = useConfirm();
+    mockDelete.mockRejectedValueOnce(new Error('Delete error'));
+
+    const crud = createCrudInstance();
+    const removePromise = crud.remove(3, 'Item Error');
+
+    handleConfirm();
+    const result = await removePromise;
+    expect(result).toBe(false);
   });
 });

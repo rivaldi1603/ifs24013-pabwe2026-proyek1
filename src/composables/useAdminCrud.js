@@ -32,7 +32,7 @@ export function useAdminCrud({
     loading.value = true;
     try {
       const res = await fetchFn();
-      if (res && res.success) {
+      if (res?.success) {
         items.value = res.data || [];
       } else {
         items.value = [];
@@ -66,7 +66,7 @@ export function useAdminCrud({
         ? await updateFn(form.value.id, form.value)
         : await createFn(form.value);
 
-      if (res && res.success) {
+      if (res?.success) {
         modalOpen.value = false;
         await load();
         toastSuccess(`${entityLabel} berhasil ${isEdit ? 'diperbarui' : 'disimpan'}!`);
@@ -99,7 +99,7 @@ export function useAdminCrud({
 
     try {
       const res = await deleteFn(id);
-      if (res && res.success) {
+      if (res?.success) {
         await load();
         toastSuccess(`${entityLabel} "${label}" berhasil dihapus.`);
         return true;

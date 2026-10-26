@@ -3,15 +3,17 @@
     v-if="modelValue"
     class="modal-overlay"
     @click.self="onBackdropClick"
-    @keydown.esc="close"
-    role="dialog"
-    aria-modal="true"
-    tabindex="-1"
   >
-    <div class="modal-card" :style="{ maxWidth: maxWidth }">
+    <dialog
+      ref="modalCardRef"
+      class="modal-card"
+      :style="{ '--modal-max-w': maxWidth }"
+      open
+      aria-labelledby="modal-title-heading"
+    >
       <div class="modal-header">
         <slot name="header">
-          <h2 class="modal-title">{{ title }}</h2>
+          <h2 id="modal-title-heading" class="modal-title">{{ title }}</h2>
         </slot>
         <button
           type="button"
@@ -23,7 +25,7 @@
         </button>
       </div>
 
-      <form @submit.prevent="$emit('submit')" class="modal-form-grid">
+      <form @submit.prevent="$emit('submit')" class="modal-form-grid" novalidate>
         <slot></slot>
 
         <slot name="footer">
@@ -45,11 +47,14 @@
           </div>
         </slot>
       </form>
-    </div>
+    </dialog>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+import { useFocusTrap } from '../../composables/useFocusTrap.js';
+
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -83,6 +88,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'submit', 'close']);
 
+const modalCardRef = ref(null);
+
 function close() {
   emit('update:modelValue', false);
   emit('close');
@@ -93,6 +100,14 @@ function onBackdropClick() {
     close();
   }
 }
+
+// Strict accessibility focus trap and ESC key handling
+useFocusTrap(modalCardRef, () => props.modelValue, {
+  onClose: close,
+  autoFocus: true,
+  restoreFocus: true,
+  lockScroll: true
+});
 </script>
 
 <style scoped>
@@ -112,7 +127,12 @@ function onBackdropClick() {
 .modal-card {
   background: #ffffff;
   border-radius: 16px;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
   width: 100%;
+  max-width: var(--modal-max-w, 680px);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -142,7 +162,7 @@ function onBackdropClick() {
   border: none;
   font-size: 1.75rem;
   line-height: 1;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
   border-radius: 8px;
   width: 32px;
@@ -153,9 +173,11 @@ function onBackdropClick() {
   transition: all 0.15s ease;
 }
 
-.modal-close-btn:hover {
+.modal-close-btn:hover,
+.modal-close-btn:focus-visible {
   background: #e2e8f0;
-  color: #1e293b;
+  color: #0f172a;
+  outline: 2px solid #0f766e;
 }
 
 .modal-form-grid {
@@ -179,14 +201,14 @@ function onBackdropClick() {
 :deep(.form-label) {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #334155;
+  color: #1e293b;
 }
 
 :deep(.form-input),
 :deep(.form-select),
 :deep(.form-textarea) {
   padding: 0.65rem 0.85rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #94a3b8;
   border-radius: 8px;
   font-size: 0.925rem;
   color: #0f172a;
@@ -198,8 +220,20 @@ function onBackdropClick() {
 :deep(.form-input:focus),
 :deep(.form-select:focus),
 :deep(.form-textarea:focus) {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.2);
+}
+
+:deep(.input-error) {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+}
+
+:deep(.field-error-msg) {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  font-weight: 600;
+  margin-top: 0.2rem;
 }
 
 :deep(.form-checkbox-label) {
@@ -207,7 +241,7 @@ function onBackdropClick() {
   align-items: center;
   gap: 0.65rem;
   font-size: 0.9rem;
-  color: #334155;
+  color: #1e293b;
   cursor: pointer;
 }
 
@@ -232,21 +266,23 @@ function onBackdropClick() {
 
 .btn-secondary {
   background: #f1f5f9;
-  color: #475569;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 
 .btn-secondary:hover {
   background: #e2e8f0;
-  color: #1e293b;
+  color: #0f172a;
 }
 
+/* High contrast primary button meeting WCAG AA (>= 5.5:1 ratio) */
 .btn-primary {
-  background: #0d9488;
+  background: #0f766e;
   color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0f766e;
+  background: #0b5e58;
 }
 
 .btn-primary:disabled {

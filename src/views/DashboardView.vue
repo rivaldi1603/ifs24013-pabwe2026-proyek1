@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
 
 const { currentUser: user } = useAuth();
 </script>

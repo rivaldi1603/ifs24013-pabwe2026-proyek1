@@ -244,7 +244,7 @@
 <script setup>
 import { ref, shallowRef, computed, onMounted } from 'vue';
 import { api } from '../api';
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
 
 const { currentUser: user, setUser } = useAuth();
 

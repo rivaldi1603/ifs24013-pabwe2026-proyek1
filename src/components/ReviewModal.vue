@@ -1,6 +1,6 @@
 <template>
-  <div v-if="isOpen" class="modal-overlay" @click.self="close">
-    <div class="modal-card fade-in">
+  <div v-if="isOpen" class="modal-overlay" @click.self="close" role="dialog" aria-modal="true" aria-label="Tulis Ulasan & Penilaian">
+    <div ref="reviewModalRef" class="modal-card fade-in">
       <div class="modal-header">
         <h3 class="modal-title">Tulis Ulasan & Penilaian</h3>
         <button class="modal-close-btn" @click="close">&times;</button>
@@ -90,7 +90,8 @@
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../api';
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
+import { useFocusTrap } from '../composables/useFocusTrap';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -112,11 +113,19 @@ const emit = defineEmits(['close', 'review-submitted']);
 const { currentUser } = useAuth();
 const route = useRoute();
 
+const reviewModalRef = ref(null);
 const rating = ref(5);
 const reviewerName = ref('');
 const reviewText = ref('');
 const submitting = ref(false);
 const errorMsg = ref('');
+
+useFocusTrap(reviewModalRef, () => props.isOpen, {
+  onClose: close,
+  autoFocus: true,
+  restoreFocus: true,
+  lockScroll: true
+});
 
 // Pre-fill user name if logged in
 watch(() => props.isOpen, (newVal) => {

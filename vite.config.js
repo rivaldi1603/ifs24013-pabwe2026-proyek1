@@ -24,7 +24,12 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'lcov', 'html'],
       reportsDirectory: './coverage',
-      include: ['src/utils/**/*.js', 'src/auth.js'],
+      include: [
+        'src/utils/**/*.js',
+        'src/constants/**/*.js',
+        'src/composables/**/*.js',
+        'src/auth.js'
+      ],
       all: true
     }
   }

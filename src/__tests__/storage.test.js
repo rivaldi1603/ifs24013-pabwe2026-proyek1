@@ -5,13 +5,17 @@ import {
   setStoredToken,
   getStoredUser,
   setStoredUser,
-  clearStoredAuth
+  clearStoredAuth,
+  syncStoredUser,
+  isValidTokenFormat,
+  isTokenExpired
 } from '../constants/storage.js';
 
 describe('storage.js constants and security helpers', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    clearStoredAuth();
   });
 
   it('exports frozen STORAGE_KEYS constants', () => {
@@ -19,6 +23,47 @@ describe('storage.js constants and security helpers', () => {
     expect(STORAGE_KEYS.USER).toBe('jt_user');
     expect(STORAGE_KEYS.THEME).toBe('jt_theme');
     expect(Object.isFrozen(STORAGE_KEYS)).toBe(true);
+  });
+
+  describe('token format validation and expiration helpers', () => {
+    it('validates token format with isValidTokenFormat', () => {
+      expect(isValidTokenFormat('valid-jwt-token-string')).toBe(true);
+      expect(isValidTokenFormat('')).toBe(false);
+      expect(isValidTokenFormat('a')).toBe(false);
+      expect(isValidTokenFormat(null)).toBe(false);
+      expect(isValidTokenFormat('token with spaces')).toBe(false);
+      expect(isValidTokenFormat('token<script>')).toBe(false);
+    });
+
+    it('evaluates token expiration with isTokenExpired', () => {
+      expect(isTokenExpired(null)).toBe(true);
+      expect(isTokenExpired('')).toBe(true);
+      expect(isTokenExpired('opaque-token')).toBe(false);
+
+      // Create a valid payload with future exp
+      const futureExp = Math.floor(Date.now() / 1000) + 3600;
+      const futurePayload = btoa(JSON.stringify({ exp: futureExp }));
+      const futureToken = `header.${futurePayload}.signature`;
+      expect(isTokenExpired(futureToken)).toBe(false);
+
+      // Create an expired payload with past exp
+      const pastExp = Math.floor(Date.now() / 1000) - 3600;
+      const pastPayload = btoa(JSON.stringify({ exp: pastExp }));
+      const expiredToken = `header.${pastPayload}.signature`;
+      expect(isTokenExpired(expiredToken)).toBe(true);
+
+      // Malformed base64
+      expect(isTokenExpired('header.%%%invalid%%%.sig')).toBe(false);
+    });
+
+    it('purges expired token upon retrieval in getStoredToken', () => {
+      const pastExp = Math.floor(Date.now() / 1000) - 3600;
+      const pastPayload = btoa(JSON.stringify({ exp: pastExp }));
+      const expiredToken = `header.${pastPayload}.sig`;
+
+      sessionStorage.setItem(STORAGE_KEYS.TOKEN, expiredToken);
+      expect(getStoredToken()).toBeNull();
+    });
   });
 
   describe('token storage management', () => {
@@ -40,7 +85,7 @@ describe('storage.js constants and security helpers', () => {
       expect(getStoredToken()).toBe('persistent-jwt-token-123');
     });
 
-    it('clears token when setStoredToken is called with null or empty string', () => {
+    it('clears token when setStoredToken is called with null or invalid token', () => {
       setStoredToken('active-token', true);
       expect(getStoredToken()).toBe('active-token');
 
@@ -76,6 +121,15 @@ describe('storage.js constants and security helpers', () => {
       expect(sessionStorage.getItem(STORAGE_KEYS.USER)).toBeNull();
       expect(localStorage.getItem(STORAGE_KEYS.USER)).toBeNull();
       expect(getStoredUser()).toBeNull();
+    });
+
+    it('syncStoredUser saves user if localStorage is missing it', () => {
+      syncStoredUser(mockUser);
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.USER))).toEqual(mockUser);
+
+      // If already present, does not overwrite
+      syncStoredUser(null);
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.USER))).toEqual(mockUser);
     });
   });
 

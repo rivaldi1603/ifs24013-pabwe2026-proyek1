@@ -1,7 +1,7 @@
 <template>
   <div class="admin-page container">
     <!-- HEADER ADMIN -->
-    <div class="dash-header admin-header-theme fade-in">
+    <header class="dash-header admin-header-theme fade-in">
       <div>
         <div class="badge-role-row">
           <span class="user-role-badge badge-admin-glow">👑 SUPER ADMINISTRATOR</span>
@@ -14,514 +14,329 @@
       </div>
 
       <div class="dash-quick-create">
-        <button v-if="currentTab === 'destinations'" @click="openAddDestinationModal" class="btn btn-primary">
+        <button v-if="currentTab === 'destinations'" type="button" @click="destCrud.openAdd()" class="btn btn-primary">
           + Tambah Destinasi Baru
         </button>
-        <button v-else-if="currentTab === 'services'" @click="openAddServiceModal" class="btn btn-accent">
+        <button v-else-if="currentTab === 'services'" type="button" @click="serviceCrud.openAdd()" class="btn btn-accent">
           + Tambah Jasa / Homestay
         </button>
-        <button v-else-if="currentTab === 'transport'" @click="openAddTransportModal" class="btn btn-primary">
+        <button v-else-if="currentTab === 'transport'" type="button" @click="transportCrud.openAdd()" class="btn btn-primary">
           + Tambah Rute Ferry
         </button>
-        <button v-else-if="currentTab === 'culinary'" @click="openAddCulinaryModal" class="btn btn-accent">
+        <button v-else-if="currentTab === 'culinary'" type="button" @click="culinaryCrud.openAdd()" class="btn btn-accent">
           + Tambah Kuliner Khas
         </button>
-        <button v-else-if="currentTab === 'articles'" @click="openAddArticleModal" class="btn btn-primary">
+        <button v-else-if="currentTab === 'articles'" type="button" @click="articleCrud.openAdd()" class="btn btn-primary">
           + Tulis Cerita Toba
         </button>
       </div>
-    </div>
+    </header>
 
     <!-- METRICS GRID -->
-    <div class="metrics-grid fade-in">
-      <div class="metric-card card" @click="currentTab = 'destinations'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #e0f2fe; color: #0369a1;">📍</div>
+    <section class="metrics-grid fade-in" aria-label="Ringkasan Statistik Konten">
+      <div
+        v-for="tab in ADMIN_TABS"
+        :key="tab.id"
+        class="metric-card card clickable"
+        :class="tab.themeClass"
+        @click="currentTab = tab.id"
+      >
+        <div class="metric-icon-wrap">{{ tab.icon }}</div>
         <div class="metric-data">
-          <span class="metric-num">{{ destinations.length }}</span>
-          <span class="metric-label">Destinasi Wisata</span>
+          <span class="metric-num">{{ getCountForTab(tab.id) }}</span>
+          <span class="metric-label">{{ tab.label }}</span>
         </div>
       </div>
-      <div class="metric-card card" @click="currentTab = 'services'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #d1fae5; color: #047857;">🧶</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ services.length }}</span>
-          <span class="metric-label">Jasa & Homestay</span>
-        </div>
-      </div>
-      <div class="metric-card card" @click="currentTab = 'transport'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #e0e7ff; color: #4338ca;">🚢</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ transportRoutes.length }}</span>
-          <span class="metric-label">Jadwal Ferry & Kapal</span>
-        </div>
-      </div>
-      <div class="metric-card card" @click="currentTab = 'culinary'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #ffedd5; color: #c2410c;">🍲</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ culinaryItems.length }}</span>
-          <span class="metric-label">Menu Kuliner Khas</span>
-        </div>
-      </div>
-      <div class="metric-card card" @click="currentTab = 'articles'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #fef3c7; color: #b45309;">📖</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ articles.length }}</span>
-          <span class="metric-label">Cerita / Artikel Toba</span>
-        </div>
-      </div>
-      <div class="metric-card card" @click="currentTab = 'reviews'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #fee2e2; color: #b91c1c;">💬</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ allReviews.length }}</span>
-          <span class="metric-label">Ulasan Pengunjung</span>
-        </div>
-      </div>
-      <div class="metric-card card" @click="currentTab = 'users'" style="cursor: pointer;">
-        <div class="metric-icon-wrap" style="background: #f3e8ff; color: #6d28d9;">👥</div>
-        <div class="metric-data">
-          <span class="metric-num">{{ usersList.length }}</span>
-          <span class="metric-label">Pengguna Terdaftar</span>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <!-- 7 TABS ADMIN UNTUK SELURUH HALAMAN -->
-    <div class="dash-tabs fade-in">
+    <!-- TABS ADMIN NAV -->
+    <nav class="dash-tabs fade-in" aria-label="Navigasi Tab Admin">
       <button
+        v-for="tab in ADMIN_TABS"
+        :key="tab.id"
+        type="button"
         class="dash-tab-btn"
-        :class="{ active: currentTab === 'destinations' }"
-        @click="currentTab = 'destinations'"
+        :class="{ active: currentTab === tab.id }"
+        @click="currentTab = tab.id"
       >
-        📍 Destinasi ({{ destinations.length }})
+        {{ tab.icon }} {{ tab.label }} ({{ getCountForTab(tab.id) }})
       </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'services' }"
-        @click="currentTab = 'services'"
-      >
-        🧶 Jasa & Homestay ({{ services.length }})
-      </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'transport' }"
-        @click="currentTab = 'transport'"
-      >
-        🚢 Jadwal Ferry ({{ transportRoutes.length }})
-      </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'culinary' }"
-        @click="currentTab = 'culinary'"
-      >
-        🍲 Kuliner Khas ({{ culinaryItems.length }})
-      </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'articles' }"
-        @click="currentTab = 'articles'"
-      >
-        📖 Cerita Toba ({{ articles.length }})
-      </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'reviews' }"
-        @click="currentTab = 'reviews'"
-      >
-        💬 Moderasi Ulasan ({{ allReviews.length }})
-      </button>
-      <button
-        class="dash-tab-btn"
-        :class="{ active: currentTab === 'users' }"
-        @click="currentTab = 'users'"
-      >
-        👥 Pengguna ({{ usersList.length }})
-      </button>
-    </div>
+    </nav>
 
     <!-- TAB 1: DESTINASI WISATA -->
-    <div v-if="currentTab === 'destinations'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Kelola Destinasi Wisata</h2>
-          <p class="panel-sub">Tambah, ubah data, atau hapus tempat wisata di kawasan Danau Toba.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="destSearch" type="text" placeholder="Cari destinasi..." class="form-input search-mini" />
-          <button @click="openAddDestinationModal" class="btn btn-primary btn-sm">+ Tambah</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nama Destinasi</th>
-              <th>Kabupaten</th>
-              <th>Tarif</th>
-              <th>Rating</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in filteredDestinations" :key="d.id">
-              <td><span class="id-tag">#{{ d.id }}</span></td>
-              <td>
-                <strong>{{ d.name }}</strong>
-                <span class="table-sub">{{ d.category_name }}</span>
-              </td>
-              <td>{{ d.regency_short || d.regency_name }}</td>
-              <td>{{ d.price_display }}</td>
-              <td>★ {{ Number(d.rating_avg || 4.5).toFixed(1) }} ({{ d.review_count || 0 }})</td>
-              <td>
-                <div class="table-actions">
-                  <button @click="editDestination(d)" class="btn-table btn-edit">✏️ Edit</button>
-                  <button @click="deleteDest(d.id, d.name)" class="btn-table btn-del">🗑️ Hapus</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'destinations'"
+      title="Kelola Destinasi Wisata"
+      subtitle="Tambah, ubah data, atau hapus tempat wisata di kawasan Danau Toba."
+      search-placeholder="Cari destinasi..."
+      add-button-text="+ Tambah"
+      add-button-class="btn-primary"
+      :columns="DESTINATION_COLUMNS"
+      :items="destCrud.filteredItems.value"
+      :loading="destCrud.loading.value"
+      v-model:search-query="destCrud.searchQuery.value"
+      @add="destCrud.openAdd()"
+      @edit="destCrud.openEdit"
+      @delete="(item) => destCrud.remove(item.id, item.name)"
+    >
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+        <span class="table-sub">{{ item.category_name }}</span>
+      </template>
+      <template #cell-regency="{ item }">
+        {{ item.regency_short || item.regency_name }}
+      </template>
+      <template #cell-price="{ item }">
+        {{ item.price_display }}
+      </template>
+      <template #cell-rating="{ item }">
+        ★ {{ Number(item.rating_avg || 4.5).toFixed(1) }} ({{ item.review_count || 0 }})
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 2: JASA BUDAYA & HOMESTAY -->
-    <div v-if="currentTab === 'services'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Kelola Jasa Budaya & Homestay Warga</h2>
-          <p class="panel-sub">Layanan berbasis komunitas lokal Danau Toba.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="serviceSearch" type="text" placeholder="Cari jasa / pengelola..." class="form-input search-mini" />
-          <button @click="openAddServiceModal" class="btn btn-accent btn-sm">+ Tambah</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Layanan</th>
-              <th>Penyedia / Warga</th>
-              <th>Tipe</th>
-              <th>Tarif</th>
-              <th>WhatsApp</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="s in filteredServices" :key="s.id">
-              <td><span class="id-tag">#{{ s.id }}</span></td>
-              <td>
-                <strong>{{ s.name }}</strong>
-                <span class="table-sub">{{ s.regency_short || s.regency_name }}</span>
-              </td>
-              <td>{{ s.provider_name }}</td>
-              <td><span class="badge badge-service">{{ formatServiceType(s.service_type) }}</span></td>
-              <td>{{ s.price_display }} <small v-if="s.price_unit">/{{ s.price_unit }}</small></td>
-              <td><code>{{ s.contact_wa || '-' }}</code></td>
-              <td>
-                <div class="table-actions">
-                  <button @click="editService(s)" class="btn-table btn-edit">✏️ Edit</button>
-                  <button @click="deleteServ(s.id, s.name)" class="btn-table btn-del">🗑️ Hapus</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'services'"
+      title="Kelola Jasa Budaya & Homestay Warga"
+      subtitle="Layanan berbasis komunitas lokal Danau Toba."
+      search-placeholder="Cari jasa / pengelola..."
+      add-button-text="+ Tambah"
+      add-button-class="btn-accent"
+      :columns="SERVICE_COLUMNS"
+      :items="serviceCrud.filteredItems.value"
+      :loading="serviceCrud.loading.value"
+      v-model:search-query="serviceCrud.searchQuery.value"
+      @add="serviceCrud.openAdd()"
+      @edit="serviceCrud.openEdit"
+      @delete="(item) => serviceCrud.remove(item.id, item.name)"
+    >
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+        <span class="table-sub">{{ item.regency_short || item.regency_name }}</span>
+      </template>
+      <template #cell-provider="{ item }">
+        {{ item.provider_name }}
+      </template>
+      <template #cell-service_type="{ item }">
+        <span class="badge badge-service">{{ formatServiceType(item.service_type) }}</span>
+      </template>
+      <template #cell-price="{ item }">
+        {{ item.price_display }} <small v-if="item.price_unit">/{{ item.price_unit }}</small>
+      </template>
+      <template #cell-contact_wa="{ item }">
+        <code>{{ item.contact_wa || '-' }}</code>
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 3: JADWAL FERRY & TRANSPORTASI -->
-    <div v-if="currentTab === 'transport'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Kelola Jadwal Ferry & Transportasi Danau Toba</h2>
-          <p class="panel-sub">Jadwal penyeberangan KMP Ferry, kapal kayu tradisional, dan shuttle darat.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="transportSearch" type="text" placeholder="Cari rute penyeberangan..." class="form-input search-mini" />
-          <button @click="openAddTransportModal" class="btn btn-primary btn-sm">+ Tambah Rute</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nama Rute Penyeberangan</th>
-              <th>Jenis</th>
-              <th>Arah / Lintasan</th>
-              <th>Jadwal / Jam Berangkat</th>
-              <th>Tarif</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="t in filteredTransport" :key="t.id">
-              <td><span class="id-tag">#{{ t.id }}</span></td>
-              <td>
-                <strong>{{ t.name }}</strong>
-                <span class="table-sub">{{ t.operator || 'Dishub' }}</span>
-              </td>
-              <td>
-                <span class="badge" :class="t.transport_type === 'ferry' ? 'badge-role-admin' : 'badge-role-partner'">
-                  {{ t.transport_type === 'ferry' ? '🚢 Ferry KMP' : (t.transport_type === 'traditional_boat' ? '⛵ Kapal Tradisional' : '🚐 Shuttle') }}
-                </span>
-              </td>
-              <td><strong>{{ t.route_direction }}</strong></td>
-              <td>{{ t.departure_hours }}</td>
-              <td>{{ t.price_display }}</td>
-              <td>
-                <div class="table-actions">
-                  <button @click="editTransport(t)" class="btn-table btn-edit">✏️ Edit</button>
-                  <button @click="deleteTrans(t.id, t.name)" class="btn-table btn-del">🗑️ Hapus</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'transport'"
+      title="Kelola Jadwal Ferry & Transportasi Danau Toba"
+      subtitle="Jadwal penyeberangan KMP Ferry, kapal kayu tradisional, dan shuttle darat."
+      search-placeholder="Cari rute penyeberangan..."
+      add-button-text="+ Tambah Rute"
+      add-button-class="btn-primary"
+      :columns="TRANSPORT_COLUMNS"
+      :items="transportCrud.filteredItems.value"
+      :loading="transportCrud.loading.value"
+      v-model:search-query="transportCrud.searchQuery.value"
+      @add="transportCrud.openAdd()"
+      @edit="transportCrud.openEdit"
+      @delete="(item) => transportCrud.remove(item.id, item.name)"
+    >
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+        <span class="table-sub">{{ item.operator || 'Dishub' }}</span>
+      </template>
+      <template #cell-transport_type="{ item }">
+        <span class="badge" :class="item.transport_type === 'ferry' ? 'badge-role-admin' : 'badge-role-partner'">
+          {{ item.transport_type === 'ferry' ? '🚢 Ferry KMP' : (item.transport_type === 'traditional_boat' ? '⛵ Kapal Tradisional' : '🚐 Shuttle') }}
+        </span>
+      </template>
+      <template #cell-route_direction="{ item }">
+        <strong>{{ item.route_direction }}</strong>
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 4: KULINER KHAS BATAK -->
-    <div v-if="currentTab === 'culinary'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Kelola Menu Kuliner Khas</h2>
-          <p class="panel-sub">Katalog kuliner tradisional Danau Toba (Naniura, Arsik, Sasagun, dll).</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="culinarySearch" type="text" placeholder="Cari kuliner..." class="form-input search-mini" />
-          <button @click="openAddCulinaryModal" class="btn btn-accent btn-sm">+ Tambah Kuliner</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nama Kuliner</th>
-              <th>Status Halal</th>
-              <th>Asal Daerah</th>
-              <th>Deskripsi Singkat</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in filteredCulinary" :key="c.id">
-              <td><span class="id-tag">#{{ c.id }}</span></td>
-              <td><strong>{{ c.name }}</strong></td>
-              <td>
-                <span class="badge" :style="c.halal_status === 'Halal' ? 'background:#d1fae5; color:#065f46;' : 'background:#fee2e2; color:#991b1b;'">
-                  {{ c.halal_status }}
-                </span>
-              </td>
-              <td>{{ c.origin_region }}</td>
-              <td><p class="table-desc-cell">{{ c.description }}</p></td>
-              <td>
-                <div class="table-actions">
-                  <button @click="editCulinary(c)" class="btn-table btn-edit">✏️ Edit</button>
-                  <button @click="deleteCulin(c.id, c.name)" class="btn-table btn-del">🗑️ Hapus</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'culinary'"
+      title="Kelola Menu Kuliner Khas"
+      subtitle="Katalog kuliner tradisional Danau Toba (Naniura, Arsik, Sasagun, dll)."
+      search-placeholder="Cari kuliner..."
+      add-button-text="+ Tambah Kuliner"
+      add-button-class="btn-accent"
+      :columns="CULINARY_COLUMNS"
+      :items="culinaryCrud.filteredItems.value"
+      :loading="culinaryCrud.loading.value"
+      v-model:search-query="culinaryCrud.searchQuery.value"
+      @add="culinaryCrud.openAdd()"
+      @edit="culinaryCrud.openEdit"
+      @delete="(item) => culinaryCrud.remove(item.id, item.name)"
+    >
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+      </template>
+      <template #cell-halal_status="{ item }">
+        <span class="badge" :class="item.halal_status === 'Halal' ? 'badge-halal' : 'badge-non-halal'">
+          {{ item.halal_status }}
+        </span>
+      </template>
+      <template #cell-description="{ item }">
+        <p class="table-desc-cell">{{ item.description }}</p>
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 5: CERITA TOBA (ARTIKEL) -->
-    <div v-if="currentTab === 'articles'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Kelola Cerita Danau Toba (Artikel Budaya & Wisata)</h2>
-          <p class="panel-sub">Artikel wawasan budaya, legenda, dan tips perjalanan bagi wisatawan.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="articleSearch" type="text" placeholder="Cari judul cerita..." class="form-input search-mini" />
-          <button @click="openAddArticleModal" class="btn btn-primary btn-sm">+ Tulis Cerita Baru</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Judul Cerita / Artikel</th>
-              <th>Wilayah Kabupaten</th>
-              <th>Ringkasan Cerita</th>
-              <th>Tanggal Publikasi</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="a in filteredArticles" :key="a.id">
-              <td><span class="id-tag">#{{ a.id }}</span></td>
-              <td>
-                <strong>{{ a.title }}</strong>
-                <span class="table-sub"><a :href="a.source_url || '#'" target="_blank" style="color:var(--primary-600);">Buka Sumber Tautan</a></span>
-              </td>
-              <td>{{ a.regency_short || a.regency_name || 'Kawasan Toba' }}</td>
-              <td><p class="table-desc-cell">{{ a.summary }}</p></td>
-              <td><small class="time-sub">{{ a.published_at }}</small></td>
-              <td>
-                <div class="table-actions">
-                  <button @click="editArticle(a)" class="btn-table btn-edit">✏️ Edit</button>
-                  <button @click="deleteArtic(a.id, a.title)" class="btn-table btn-del">🗑️ Hapus</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'articles'"
+      title="Kelola Cerita Danau Toba (Artikel Budaya & Wisata)"
+      subtitle="Artikel wawasan budaya, legenda, dan tips perjalanan bagi wisatawan."
+      search-placeholder="Cari judul cerita..."
+      add-button-text="+ Tulis Cerita Baru"
+      add-button-class="btn-primary"
+      :columns="ARTICLE_COLUMNS"
+      :items="articleCrud.filteredItems.value"
+      :loading="articleCrud.loading.value"
+      v-model:search-query="articleCrud.searchQuery.value"
+      @add="articleCrud.openAdd()"
+      @edit="articleCrud.openEdit"
+      @delete="(item) => articleCrud.remove(item.id, item.title)"
+    >
+      <template #cell-title="{ item }">
+        <strong>{{ item.title }}</strong>
+        <span class="table-sub">
+          <a :href="item.source_url || '#'" target="_blank" rel="noopener noreferrer" class="link-source">
+            Buka Sumber Tautan
+          </a>
+        </span>
+      </template>
+      <template #cell-regency="{ item }">
+        {{ item.regency_short || item.regency_name || 'Kawasan Toba' }}
+      </template>
+      <template #cell-summary="{ item }">
+        <p class="table-desc-cell">{{ item.summary }}</p>
+      </template>
+      <template #cell-published_at="{ item }">
+        <small class="time-sub">{{ item.published_at }}</small>
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 6: MODERASI ULASAN PENGUNJUNG -->
-    <div v-if="currentTab === 'reviews'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Moderasi Ulasan Pengunjung</h2>
-          <p class="panel-sub">Hapus ulasan spam atau komentar tidak pantas dari pengunjung.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="reviewSearch" type="text" placeholder="Cari pengulas..." class="form-input search-mini" />
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Pengulas</th>
-              <th>Target Tempat</th>
-              <th>Rating</th>
-              <th>Komentar</th>
-              <th>Waktu</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in filteredReviews" :key="r.id">
-              <td><span class="id-tag">#{{ r.id }}</span></td>
-              <td>
-                <strong>{{ r.reviewer_name }}</strong>
-                <span class="table-sub">{{ r.user_id ? 'Terdaftar' : 'Tamu' }}</span>
-              </td>
-              <td>
-                <span class="badge-target">{{ r.target_type === 'destination' ? '📍 Destinasi' : '🧶 Layanan' }}</span>
-                <div style="font-weight: 600; margin-top: 2px;">{{ r.target_name || ('ID: ' + r.target_id) }}</div>
-              </td>
-              <td><span class="rating-stars-gold">★ {{ Number(r.rating).toFixed(1) }}</span></td>
-              <td><p class="review-comment-full">"{{ r.review_text }}"</p></td>
-              <td><small class="time-sub">{{ r.created_at }}</small></td>
-              <td>
-                <button @click="handleDeleteReview(r.id)" class="btn-table btn-del">🗑️ Hapus</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'reviews'"
+      title="Moderasi Ulasan Pengunjung"
+      subtitle="Hapus ulasan spam atau komentar tidak pantas dari pengunjung."
+      search-placeholder="Cari pengulas..."
+      :show-add-button="false"
+      :can-edit="false"
+      :columns="REVIEW_COLUMNS"
+      :items="filteredReviews"
+      :loading="loadingReviews"
+      v-model:search-query="reviewSearch"
+      @delete="(r) => handleDeleteReview(r.id)"
+    >
+      <template #cell-reviewer="{ item }">
+        <strong>{{ item.reviewer_name }}</strong>
+        <span class="table-sub">{{ item.user_id ? 'Terdaftar' : 'Tamu' }}</span>
+      </template>
+      <template #cell-target="{ item }">
+        <span class="badge-target">{{ item.target_type === 'destination' ? '📍 Destinasi' : '🧶 Layanan' }}</span>
+        <div class="target-title">{{ item.target_name || ('ID: ' + item.target_id) }}</div>
+      </template>
+      <template #cell-rating="{ item }">
+        <span class="rating-stars-gold">★ {{ Number(item.rating).toFixed(1) }}</span>
+      </template>
+      <template #cell-review_text="{ item }">
+        <p class="review-comment-full">"{{ item.review_text }}"</p>
+      </template>
+      <template #cell-created_at="{ item }">
+        <small class="time-sub">{{ item.created_at }}</small>
+      </template>
+    </AdminEntityTable>
 
     <!-- TAB 7: MANAJEMEN PENGGUNA (USERS) -->
-    <div v-if="currentTab === 'users'" class="tab-panel card fade-in">
-      <div class="panel-header">
-        <div>
-          <h2>Daftar Pengguna Terdaftar</h2>
-          <p class="panel-sub">Seluruh pengguna platform JelajahToba yang tersimpan di basis data.</p>
-        </div>
-        <div class="panel-tools">
-          <input v-model="userSearch" type="text" placeholder="Cari nama atau email..." class="form-input search-mini" />
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nama Lengkap</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Nomor HP</th>
-              <th>Bio Pengguna</th>
-              <th>Terdaftar</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="u in filteredUsersList" :key="u.id">
-              <td><span class="id-tag">#{{ u.id }}</span></td>
-              <td>
-                <strong>{{ u.name }}</strong>
-                <span v-if="u.organization" class="table-sub">{{ u.organization }}</span>
-              </td>
-              <td><code>{{ u.email }}</code></td>
-              <td>
-                <span
-                  class="badge"
-                  :class="{
-                    'badge-role-admin': u.role === 'admin',
-                    'badge-role-partner': u.role === 'partner',
-                    'badge-role-user': u.role === 'user'
-                  }"
-                >
-                  {{ u.role === 'admin' ? '👑 Admin' : (u.role === 'partner' ? '🧶 Mitra' : '👤 Wisatawan') }}
-                </span>
-              </td>
-              <td>{{ u.phone || '-' }}</td>
-              <td><small class="table-desc-cell">{{ u.bio || '-' }}</small></td>
-              <td><small class="time-sub">{{ u.created_at }}</small></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <AdminEntityTable
+      v-if="currentTab === 'users'"
+      title="Daftar Pengguna Terdaftar"
+      subtitle="Seluruh pengguna platform JelajahToba yang tersimpan di basis data."
+      search-placeholder="Cari nama atau email..."
+      :show-add-button="false"
+      :can-edit="false"
+      :can-delete="false"
+      :columns="USER_COLUMNS"
+      :items="filteredUsersList"
+      :loading="loadingUsers"
+      v-model:search-query="userSearch"
+    >
+      <template #cell-name="{ item }">
+        <strong>{{ item.name }}</strong>
+        <span v-if="item.organization" class="table-sub">{{ item.organization }}</span>
+      </template>
+      <template #cell-email="{ item }">
+        <code>{{ item.email }}</code>
+      </template>
+      <template #cell-role="{ item }">
+        <span
+          class="badge"
+          :class="{
+            'badge-role-admin': item.role === 'admin',
+            'badge-role-partner': item.role === 'partner',
+            'badge-role-user': item.role === 'user'
+          }"
+        >
+          {{ item.role === 'admin' ? '👑 Admin' : (item.role === 'partner' ? '🧶 Mitra' : '👤 Wisatawan') }}
+        </span>
+      </template>
+      <template #cell-phone="{ item }">
+        {{ item.phone || '-' }}
+      </template>
+      <template #cell-bio="{ item }">
+        <small class="table-desc-cell">{{ item.bio || '-' }}</small>
+      </template>
+      <template #cell-created_at="{ item }">
+        <small class="time-sub">{{ item.created_at }}</small>
+      </template>
+    </AdminEntityTable>
 
     <!-- ==================== MODALS ==================== -->
     <DestinationModal
-      v-model="destModalOpen"
-      :form="destForm"
+      v-model="destCrud.modalOpen.value"
+      :form="destCrud.form.value"
       :categories="categories"
       :regencies="regencies"
-      :saving="saving"
-      @save="saveDestination"
+      :saving="destCrud.saving.value"
+      @save="destCrud.save()"
     />
 
     <ServiceModal
-      v-model="serviceModalOpen"
-      :form="serviceForm"
+      v-model="serviceCrud.modalOpen.value"
+      :form="serviceCrud.form.value"
       :regencies="regencies"
-      :saving="saving"
-      @save="saveService"
+      :saving="serviceCrud.saving.value"
+      @save="serviceCrud.save()"
     />
 
     <TransportModal
-      v-model="transportModalOpen"
-      :form="transportForm"
-      :saving="saving"
-      @save="saveTransport"
+      v-model="transportCrud.modalOpen.value"
+      :form="transportCrud.form.value"
+      :saving="transportCrud.saving.value"
+      @save="transportCrud.save()"
     />
 
     <CulinaryModal
-      v-model="culinaryModalOpen"
-      :form="culinaryForm"
-      :saving="saving"
-      @save="saveCulinary"
+      v-model="culinaryCrud.modalOpen.value"
+      :form="culinaryCrud.form.value"
+      :saving="culinaryCrud.saving.value"
+      @save="culinaryCrud.save()"
     />
 
     <ArticleModal
-      v-model="articleModalOpen"
-      :form="articleForm"
+      v-model="articleCrud.modalOpen.value"
+      :form="articleCrud.form.value"
       :regencies="regencies"
-      :saving="saving"
-      @save="saveArticle"
+      :saving="articleCrud.saving.value"
+      @save="articleCrud.save()"
     />
   </div>
 </template>
@@ -529,11 +344,22 @@
 <script setup>
 import { ref, shallowRef, computed, onMounted, watch } from 'vue';
 import { api } from '../api';
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
 import { formatServiceType } from '../utils/formatters';
 import { useAdminCrud } from '../composables/useAdminCrud';
 import { useToast } from '../composables/useToast';
 import { useConfirm } from '../composables/useConfirm';
+import {
+  ADMIN_TABS,
+  DESTINATION_COLUMNS,
+  SERVICE_COLUMNS,
+  TRANSPORT_COLUMNS,
+  CULINARY_COLUMNS,
+  ARTICLE_COLUMNS,
+  REVIEW_COLUMNS,
+  USER_COLUMNS
+} from '../constants/admin';
+import AdminEntityTable from '../components/admin/AdminEntityTable.vue';
 import DestinationModal from '../components/admin/DestinationModal.vue';
 import ServiceModal from '../components/admin/ServiceModal.vue';
 import TransportModal from '../components/admin/TransportModal.vue';
@@ -552,6 +378,8 @@ const regencies = shallowRef([]);
 const categories = shallowRef([]);
 const allReviews = shallowRef([]);
 const usersList = shallowRef([]);
+const loadingReviews = ref(false);
+const loadingUsers = ref(false);
 const reviewSearch = ref('');
 const userSearch = ref('');
 
@@ -657,70 +485,26 @@ const articleCrud = useAdminCrud({
   filterFn: (a, q) => a.title.toLowerCase().includes(q) || (a.summary && a.summary.toLowerCase().includes(q))
 });
 
-// Template State Aliases for Seamless Backward Compatibility
-const destinations = destCrud.items;
-const destSearch = destCrud.searchQuery;
-const filteredDestinations = destCrud.filteredItems;
-const destModalOpen = destCrud.modalOpen;
-const destForm = destCrud.form;
-const openAddDestinationModal = () => destCrud.openAdd();
-const editDestination = (d) => destCrud.openEdit({ ...d, is_community_managed: Boolean(d.is_community_managed) });
-const saveDestination = () => destCrud.save();
-const deleteDest = (id, name) => destCrud.remove(id, name);
-const loadDestinations = () => destCrud.load();
-
-const services = serviceCrud.items;
-const serviceSearch = serviceCrud.searchQuery;
-const filteredServices = serviceCrud.filteredItems;
-const serviceModalOpen = serviceCrud.modalOpen;
-const serviceForm = serviceCrud.form;
-const openAddServiceModal = () => serviceCrud.openAdd();
-const editService = (s) => serviceCrud.openEdit(s);
-const saveService = () => serviceCrud.save();
-const deleteServ = (id, name) => serviceCrud.remove(id, name);
-const loadServices = () => serviceCrud.load();
-
-const transportRoutes = transportCrud.items;
-const transportSearch = transportCrud.searchQuery;
-const filteredTransport = transportCrud.filteredItems;
-const transportModalOpen = transportCrud.modalOpen;
-const transportForm = transportCrud.form;
-const openAddTransportModal = () => transportCrud.openAdd();
-const editTransport = (t) => transportCrud.openEdit(t);
-const saveTransport = () => transportCrud.save();
-const deleteTrans = (id, name) => transportCrud.remove(id, name);
-const loadTransport = () => transportCrud.load();
-
-const culinaryItems = culinaryCrud.items;
-const culinarySearch = culinaryCrud.searchQuery;
-const filteredCulinary = culinaryCrud.filteredItems;
-const culinaryModalOpen = culinaryCrud.modalOpen;
-const culinaryForm = culinaryCrud.form;
-const openAddCulinaryModal = () => culinaryCrud.openAdd();
-const editCulinary = (c) => culinaryCrud.openEdit(c);
-const saveCulinary = () => culinaryCrud.save();
-const deleteCulin = (id, name) => culinaryCrud.remove(id, name);
-const loadCulinary = () => culinaryCrud.load();
-
-const articles = articleCrud.items;
-const articleSearch = articleCrud.searchQuery;
-const filteredArticles = articleCrud.filteredItems;
-const articleModalOpen = articleCrud.modalOpen;
-const articleForm = articleCrud.form;
-const openAddArticleModal = () => articleCrud.openAdd();
-const editArticle = (a) => articleCrud.openEdit(a);
-const saveArticle = () => articleCrud.save();
-const deleteArtic = (id, title) => articleCrud.remove(id, title);
-const loadArticles = () => articleCrud.load();
-
-// Global saving state across any modal
-const saving = computed(() =>
-  destCrud.saving.value ||
-  serviceCrud.saving.value ||
-  transportCrud.saving.value ||
-  culinaryCrud.saving.value ||
-  articleCrud.saving.value
-);
+function getCountForTab(tabId) {
+  switch (tabId) {
+    case 'destinations':
+      return destCrud.items.value.length;
+    case 'services':
+      return serviceCrud.items.value.length;
+    case 'transport':
+      return transportCrud.items.value.length;
+    case 'culinary':
+      return culinaryCrud.items.value.length;
+    case 'articles':
+      return articleCrud.items.value.length;
+    case 'reviews':
+      return allReviews.value.length;
+    case 'users':
+      return usersList.value.length;
+    default:
+      return 0;
+  }
+}
 
 // Initial bootstrap
 async function loadInitialData() {
@@ -730,7 +514,7 @@ async function loadInitialData() {
       api.getRegencies(),
       api.getCategories()
     ]);
-    if (destRes?.success) destinations.value = destRes.data || [];
+    if (destRes?.success) destCrud.items.value = destRes.data || [];
     if (regRes?.success) regencies.value = regRes.data || [];
     if (catRes?.success) categories.value = catRes.data || [];
   } catch (err) {
@@ -739,25 +523,39 @@ async function loadInitialData() {
 }
 
 async function loadReviews() {
-  const res = await api.getReviews({ limit: 50 });
-  if (res?.success) allReviews.value = res.data || [];
+  loadingReviews.value = true;
+  try {
+    const res = await api.getReviews({ limit: 50 });
+    if (res?.success) allReviews.value = res.data || [];
+  } catch (err) {
+    console.error('Error loading reviews:', err);
+  } finally {
+    loadingReviews.value = false;
+  }
 }
 
 async function loadUsers() {
-  const res = await api.getUsers();
-  if (res?.success) usersList.value = res.data || [];
+  loadingUsers.value = true;
+  try {
+    const res = await api.getUsers();
+    if (res?.success) usersList.value = res.data || [];
+  } catch (err) {
+    console.error('Error loading users:', err);
+  } finally {
+    loadingUsers.value = false;
+  }
 }
 
 // On-demand tab loading
 watch(currentTab, async (tab) => {
-  if (tab === 'services' && services.value.length === 0) {
-    await loadServices();
-  } else if (tab === 'transport' && transportRoutes.value.length === 0) {
-    await loadTransport();
-  } else if (tab === 'culinary' && culinaryItems.value.length === 0) {
-    await loadCulinary();
-  } else if (tab === 'articles' && articles.value.length === 0) {
-    await loadArticles();
+  if (tab === 'services' && serviceCrud.items.value.length === 0) {
+    await serviceCrud.load();
+  } else if (tab === 'transport' && transportCrud.items.value.length === 0) {
+    await transportCrud.load();
+  } else if (tab === 'culinary' && culinaryCrud.items.value.length === 0) {
+    await culinaryCrud.load();
+  } else if (tab === 'articles' && articleCrud.items.value.length === 0) {
+    await articleCrud.load();
   } else if (tab === 'reviews' && allReviews.value.length === 0) {
     await loadReviews();
   } else if (tab === 'users' && usersList.value.length === 0) {
@@ -891,6 +689,10 @@ onMounted(() => {
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .metric-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
@@ -906,6 +708,15 @@ onMounted(() => {
   font-size: 1.25rem;
   flex-shrink: 0;
 }
+
+/* Metric color themes without inline styles */
+.theme-blue .metric-icon-wrap { background: #e0f2fe; color: #0369a1; }
+.theme-green .metric-icon-wrap { background: #d1fae5; color: #047857; }
+.theme-indigo .metric-icon-wrap { background: #e0e7ff; color: #4338ca; }
+.theme-orange .metric-icon-wrap { background: #ffedd5; color: #c2410c; }
+.theme-amber .metric-icon-wrap { background: #fef3c7; color: #b45309; }
+.theme-red .metric-icon-wrap { background: #fee2e2; color: #b91c1c; }
+.theme-purple .metric-icon-wrap { background: #f3e8ff; color: #6d28d9; }
 
 .metric-num {
   font-size: 1.45rem;
@@ -955,86 +766,6 @@ onMounted(() => {
   background: white;
 }
 
-/* PANELS & TABLES */
-.tab-panel {
-  padding: 1.75rem;
-  border-radius: var(--radius-xl);
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.panel-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.panel-sub {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.panel-tools {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.search-mini {
-  max-width: 240px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.data-table th {
-  background: #f8fafc;
-  color: #475569;
-  font-weight: 700;
-  text-align: left;
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.data-table td {
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.data-table tr:hover td {
-  background: #f8fafc;
-}
-
-.id-tag {
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: #1e293b;
-  background: #e2e8f0;
-  font-weight: 700;
-  padding: 0.15rem 0.35rem;
-  border-radius: 4px;
-}
-
 .table-sub {
   display: block;
   font-size: 0.75rem;
@@ -1073,6 +804,11 @@ onMounted(() => {
   background: #f1f5f9;
 }
 
+.target-title {
+  font-weight: 600;
+  margin-top: 2px;
+}
+
 .badge-service {
   background: #ede9fe;
   color: #6d28d9;
@@ -1100,110 +836,37 @@ onMounted(() => {
   font-weight: 800;
 }
 
-.table-actions {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.btn-table {
-  border: 1px solid #e2e8f0;
-  background: white;
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.55rem;
-  font-size: 0.775rem;
+.badge-halal {
+  background: #d1fae5;
+  color: #065f46;
   font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
 }
 
-.btn-edit:hover {
-  background: #f0f9ff;
-  border-color: #0369a1;
-  color: #0369a1;
-}
-
-.btn-del:hover {
+.badge-non-halal {
   background: #fee2e2;
-  border-color: #b91c1c;
-  color: #b91c1c;
+  color: #991b1b;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
 }
 
-/* MODALS */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+.link-source {
+  color: var(--primary-600);
+  font-size: 0.825rem;
+  font-weight: 500;
+  text-decoration: none;
 }
 
-.modal-card {
-  background: white;
-  border-radius: var(--radius-xl);
-  width: 100%;
-  max-width: 600px;
-  padding: 1.75rem 2rem;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-xl);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.modal-title {
-  font-size: 1.35rem;
-  color: #0f172a;
-}
-
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.75rem;
-  color: #94a3b8;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.full-width {
-  grid-column: span 2;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f1f5f9;
+.link-source:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
   .dash-header {
     flex-direction: column;
     align-items: stretch;
-  }
-  .modal-form-grid {
-    grid-template-columns: 1fr;
-  }
-  .full-width {
-    grid-column: span 1;
   }
 }
 </style>

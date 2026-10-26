@@ -133,7 +133,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api';
-import { useAuth } from '../auth';
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const route = useRoute();
