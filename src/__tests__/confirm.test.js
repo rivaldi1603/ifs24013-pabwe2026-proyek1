@@ -9,6 +9,16 @@ describe('useConfirm composable', () => {
     confirmState.value.resolve = null;
   });
 
+  it('opens confirmation modal with default parameters when no options provided', () => {
+    confirm();
+    expect(confirmState.value.isOpen).toBe(true);
+    expect(confirmState.value.title).toBe('Konfirmasi Tindakan');
+    expect(confirmState.value.message).toBe('Apakah Anda yakin ingin melanjutkan tindakan ini?');
+    expect(confirmState.value.confirmText).toBe('Ya, Lanjutkan');
+    expect(confirmState.value.cancelText).toBe('Batal');
+    expect(confirmState.value.danger).toBe(false);
+  });
+
   it('opens confirmation modal with customized parameters', () => {
     confirm({
       title: 'Hapus Item',
@@ -45,6 +55,20 @@ describe('useConfirm composable', () => {
     const result = await promise;
 
     expect(result).toBe(false);
+    expect(confirmState.value.isOpen).toBe(false);
+  });
+
+  it('handles handleConfirm and handleCancel safely when resolve is null', () => {
+    confirmState.value.isOpen = true;
+    confirmState.value.resolve = null;
+
+    handleConfirm();
+    expect(confirmState.value.isOpen).toBe(false);
+
+    confirmState.value.isOpen = true;
+    confirmState.value.resolve = null;
+
+    handleCancel();
     expect(confirmState.value.isOpen).toBe(false);
   });
 });

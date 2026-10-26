@@ -16,6 +16,11 @@ describe('useToast composable', () => {
     expect(toasts.value[0].type).toBe('success');
   });
 
+  it('supports duration 0 without setting timeout', () => {
+    add('Persistent toast', 'info', 0);
+    expect(toasts.value).toHaveLength(1);
+  });
+
   it('supports convenience methods for success, error, warning, and info', () => {
     success('Berhasil');
     error('Terjadi kesalahan');
@@ -29,7 +34,7 @@ describe('useToast composable', () => {
     expect(toasts.value[3].type).toBe('info');
   });
 
-  it('removes a toast by id', () => {
+  it('removes a toast by id and handles non-existent id gracefully', () => {
     const id1 = success('Pesan 1');
     const id2 = success('Pesan 2');
     expect(toasts.value).toHaveLength(2);
@@ -37,6 +42,10 @@ describe('useToast composable', () => {
     remove(id1);
     expect(toasts.value).toHaveLength(1);
     expect(toasts.value[0].id).toBe(id2);
+
+    // Non-existent id
+    remove(9999);
+    expect(toasts.value).toHaveLength(1);
   });
 
   it('clears all active toasts', () => {

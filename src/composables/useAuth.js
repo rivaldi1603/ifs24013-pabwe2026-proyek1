@@ -27,15 +27,13 @@ function loadUserFromStorage() {
 loadUserFromStorage();
 
 // Global listeners for cross-tab or interceptor auth synchronization
-if (typeof globalThis !== 'undefined') {
-  globalThis.addEventListener('storage', loadUserFromStorage);
-  globalThis.addEventListener('jt:auth-change', loadUserFromStorage);
-  globalThis.addEventListener('jt:unauthorized', () => {
-    clearStoredAuth();
-    currentUser.value = null;
-    globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
-  });
-}
+globalThis.addEventListener('storage', loadUserFromStorage);
+globalThis.addEventListener('jt:auth-change', loadUserFromStorage);
+globalThis.addEventListener('jt:unauthorized', () => {
+  clearStoredAuth();
+  currentUser.value = null;
+  globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
+});
 
 /**
  * Authentication Composable (useAuth)

@@ -10,6 +10,18 @@ const FOCUSABLE_SELECTOR = [
 ].join(', ');
 
 /**
+ * Checks if a DOM element is visible to the user and keyboard focusable.
+ * @param {HTMLElement} el
+ * @returns {boolean}
+ */
+export function isElementVisible(el) {
+  if (el.hasAttribute('hidden')) return false;
+  if (el.style.display === 'none') return false;
+  if (el.style.visibility === 'hidden') return false;
+  return true;
+}
+
+/**
  * Focus Trap Composable (useFocusTrap)
  * Ensures strict modal accessibility by trapping keyboard navigation within the modal,
  * preventing background scrolling, auto-focusing elements, and restoring focus upon closing.
@@ -36,16 +48,7 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
     if (!containerRef.value) return [];
     return Array.from(
       containerRef.value.querySelectorAll(FOCUSABLE_SELECTOR)
-    ).filter(el => {
-      // Check for visibility (supporting both headless/JSDOM and real browsers)
-      if (el.hasAttribute('hidden') || el.style.display === 'none' || el.style.visibility === 'hidden') {
-        return false;
-      }
-      if (el.offsetParent === null && (el.offsetWidth > 0 || el.offsetHeight > 0)) {
-        return false;
-      }
-      return true;
-    });
+    ).filter(isElementVisible);
   }
 
   function handleKeydown(event) {
@@ -80,16 +83,13 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
   }
 
   function activate() {
-    if (typeof document === 'undefined') return;
     previouslyFocusedElement = document.activeElement;
 
     if (lockScroll && document.body) {
       document.body.style.overflow = 'hidden';
     }
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('keydown', handleKeydown);
-    }
+    window.addEventListener('keydown', handleKeydown);
 
     nextTick(() => {
       if (autoFocus && containerRef.value) {
@@ -105,21 +105,17 @@ export function useFocusTrap(containerRef, isActive, options = {}) {
   }
 
   function deactivate() {
-    if (typeof document === 'undefined') return;
-
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('keydown', handleKeydown);
-    }
+    window.removeEventListener('keydown', handleKeydown);
 
     if (lockScroll && document.body) {
       document.body.style.overflow = '';
     }
 
-    if (restoreFocus && previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+    if (restoreFocus && previouslyFocusedElement?.focus) {
       try {
         previouslyFocusedElement.focus();
       } catch {
-        // Element may have been unmounted or disabled
+        // Ignore unmounted elements
       }
     }
     previouslyFocusedElement = null;

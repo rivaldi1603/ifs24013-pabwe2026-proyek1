@@ -61,7 +61,7 @@ export function isTokenExpired(token) {
   if (parts.length === 3) {
     try {
       const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const jsonStr = typeof globalThis.atob === 'function' ? globalThis.atob(payloadBase64) : null;
+      const jsonStr = atob(payloadBase64);
       if (jsonStr) {
         const payload = JSON.parse(jsonStr);
         if (typeof payload.exp === 'number') {
@@ -90,10 +90,8 @@ export function getStoredToken() {
     return inMemoryToken;
   }
 
-  if (globalThis.sessionStorage === undefined) return null;
-
   const sessionToken = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
-  const localToken = globalThis.localStorage === undefined ? null : localStorage.getItem(STORAGE_KEYS.TOKEN);
+  const localToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
   const rawToken = sessionToken || localToken || null;
 
   if (rawToken && isTokenExpired(rawToken)) {
@@ -111,25 +109,19 @@ export function getStoredToken() {
  * @param {boolean} [persist=false]
  */
 export function setStoredToken(token, persist = false) {
-  if (globalThis.sessionStorage === undefined) return;
-
   if (token && isValidTokenFormat(token)) {
     inMemoryToken = token;
     sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
 
-    if (globalThis.localStorage !== undefined) {
-      if (persist) {
-        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      }
+    if (persist) {
+      localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
     }
   } else {
     inMemoryToken = null;
     sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
-    if (globalThis.localStorage !== undefined) {
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    }
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
   }
 }
 
@@ -138,10 +130,8 @@ export function setStoredToken(token, persist = false) {
  * @returns {object|null}
  */
 export function getStoredUser() {
-  if (globalThis.localStorage === undefined) return null;
-
   const localUser = localStorage.getItem(STORAGE_KEYS.USER);
-  const sessionUser = globalThis.sessionStorage === undefined ? null : sessionStorage.getItem(STORAGE_KEYS.USER);
+  const sessionUser = sessionStorage.getItem(STORAGE_KEYS.USER);
   const userStr = localUser || sessionUser || null;
 
   if (userStr) {
@@ -163,23 +153,15 @@ export function getStoredUser() {
 export function setStoredUser(user, persist = true) {
   if (user) {
     const serialized = JSON.stringify(user);
-    if (globalThis.sessionStorage !== undefined) {
-      sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
-    }
-    if (globalThis.localStorage !== undefined) {
-      if (persist) {
-        localStorage.setItem(STORAGE_KEYS.USER, serialized);
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.USER);
-      }
-    }
-  } else {
-    if (globalThis.sessionStorage !== undefined) {
-      sessionStorage.removeItem(STORAGE_KEYS.USER);
-    }
-    if (globalThis.localStorage !== undefined) {
+    sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
+    if (persist) {
+      localStorage.setItem(STORAGE_KEYS.USER, serialized);
+    } else {
       localStorage.removeItem(STORAGE_KEYS.USER);
     }
+  } else {
+    sessionStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.USER);
   }
 }
 
@@ -188,16 +170,10 @@ export function setStoredUser(user, persist = true) {
  */
 export function clearStoredAuth() {
   inMemoryToken = null;
-
-  if (globalThis.sessionStorage !== undefined) {
-    sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
-    sessionStorage.removeItem(STORAGE_KEYS.USER);
-  }
-
-  if (globalThis.localStorage !== undefined) {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
-  }
+  sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+  sessionStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER);
 }
 
 /**
@@ -205,9 +181,7 @@ export function clearStoredAuth() {
  * @param {object} user
  */
 export function syncStoredUser(user) {
-  if (user && globalThis.localStorage !== undefined) {
-    if (!localStorage.getItem(STORAGE_KEYS.USER)) {
-      setStoredUser(user, true);
-    }
+  if (user && !localStorage.getItem(STORAGE_KEYS.USER)) {
+    setStoredUser(user, true);
   }
 }

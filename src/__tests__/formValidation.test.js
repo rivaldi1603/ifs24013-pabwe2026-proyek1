@@ -65,7 +65,7 @@ describe('useFormValidation composable and rules', () => {
   });
 
   it('validates individual field with validateField', () => {
-    const { errors, validateField } = useFormValidation({
+    const { errors, validateField, clearError } = useFormValidation({
       title: [{ validate: isRequired, message: 'Judul wajib diisi' }]
     });
 
@@ -76,5 +76,29 @@ describe('useFormValidation composable and rules', () => {
     const isValid = validateField('title', 'Danau Toba Indah');
     expect(isValid).toBe(true);
     expect(errors.value.title).toBeUndefined();
+
+    // Field without schema
+    expect(validateField('noSchema', 'anything')).toBe(true);
+
+    // Field with custom inline schema override
+    expect(validateField('customField', '', [{ validate: isRequired, message: 'Inline error' }])).toBe(false);
+    expect(errors.value.customField).toBe('Inline error');
+
+    // clearError on non-existent field does not mutate
+    clearError('non_existent_key');
+  });
+
+  it('handles null formData and aria-props without error', () => {
+    const { errors, getAriaProps, validate } = useFormValidation({
+      requiredField: [{ validate: isRequired, message: 'Required' }]
+    });
+
+    const ariaClean = getAriaProps('cleanField');
+    expect(ariaClean['aria-invalid']).toBe('false');
+    expect(ariaClean['aria-describedby']).toBeUndefined();
+
+    const result = validate(null);
+    expect(result).toBe(false);
+    expect(errors.value.requiredField).toBe('Required');
   });
 });

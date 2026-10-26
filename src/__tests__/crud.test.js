@@ -16,7 +16,7 @@ describe('useAdminCrud composable', () => {
     clear();
   });
 
-  function createCrudInstance() {
+  function createCrudInstance(options = {}) {
     return useAdminCrud({
       entityLabel: 'Destinasi',
       fetchFn: mockFetch,
@@ -25,9 +25,27 @@ describe('useAdminCrud composable', () => {
       deleteFn: mockDelete,
       defaultForm: () => ({ name: '', category_id: 1 }),
       filterFn: (item, q) => item.name.toLowerCase().includes(q),
-      onSuccess: mockOnSuccess
+      onSuccess: mockOnSuccess,
+      ...options
     });
   }
+
+  it('initializes with default parameter fallbacks when options are omitted', async () => {
+    const defaultCrud = useAdminCrud();
+    expect(defaultCrud.items.value).toEqual([]);
+    expect(defaultCrud.form.value).toEqual({});
+    expect(defaultCrud.searchQuery.value).toBe('');
+    expect(defaultCrud.filteredItems.value).toEqual([]);
+
+    // load does nothing without fetchFn
+    await defaultCrud.load();
+    expect(defaultCrud.loading.value).toBe(false);
+
+    // filterFn default returns true
+    defaultCrud.items.value = [{ id: 1, name: 'Sample' }];
+    defaultCrud.searchQuery.value = 'any';
+    expect(defaultCrud.filteredItems.value).toHaveLength(1);
+  });
 
   it('initializes with default state values and supports closeModal', () => {
     const crud = createCrudInstance();
@@ -53,6 +71,17 @@ describe('useAdminCrud composable', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(crud.items.value).toEqual(sampleData);
     expect(crud.loading.value).toBe(false);
+  });
+
+  it('handles load returning success false or null data', async () => {
+    mockFetch.mockResolvedValueOnce({ success: false });
+    const crud = createCrudInstance();
+    await crud.load();
+    expect(crud.items.value).toEqual([]);
+
+    mockFetch.mockResolvedValueOnce({ success: true, data: null });
+    await crud.load();
+    expect(crud.items.value).toEqual([]);
   });
 
   it('handles load failure or exception gracefully', async () => {
@@ -95,11 +124,22 @@ describe('useAdminCrud composable', () => {
     expect(mockOnSuccess).toHaveBeenCalledWith({ id: 10 });
   });
 
-  it('handles save failure or API rejection', async () => {
-    mockCreate.mockResolvedValueOnce({ success: false, message: 'Invalid payload' });
+  it('saves item successfully when onSuccess is not provided', async () => {
+    mockCreate.mockResolvedValueOnce({ success: true, data: { id: 15 } });
+    mockFetch.mockResolvedValueOnce({ success: true, data: [] });
+
+    const crud = createCrudInstance({ onSuccess: undefined });
+    crud.openAdd({ name: 'Tanpa Callback' });
+    const success = await crud.save();
+
+    expect(success).toBe(true);
+  });
+
+  it('handles save failure without custom error message', async () => {
+    mockCreate.mockResolvedValueOnce({ success: false });
 
     const crud = createCrudInstance();
-    crud.openAdd({ name: 'Gagal Simpan' });
+    crud.openAdd({ name: 'Gagal Default Message' });
     const success = await crud.save();
 
     expect(success).toBe(false);
@@ -160,6 +200,18 @@ describe('useAdminCrud composable', () => {
     const result = await removePromise;
     expect(result).toBe(true);
     expect(mockDelete).toHaveBeenCalledWith(1);
+  });
+
+  it('handles deletion without displayLabel and handles delete failure with default error message', async () => {
+    const { handleConfirm } = useConfirm();
+    mockDelete.mockResolvedValueOnce({ success: false });
+
+    const crud = createCrudInstance();
+    const removePromise = crud.remove(9);
+
+    handleConfirm();
+    const result = await removePromise;
+    expect(result).toBe(false);
   });
 
   it('aborts item deletion when cancelled', async () => {
