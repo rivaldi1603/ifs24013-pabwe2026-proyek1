@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import useAuthDefault, { useAuth } from '../auth.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import useAuthDefault, { useAuth, getAuth } from '../auth.js';
 import { useAuth as useAuthComposable } from '../composables/useAuth.js';
+import { api } from '../api.js';
+
 
 describe('auth.js composable unit tests', () => {
   beforeEach(() => {
@@ -15,10 +17,14 @@ describe('auth.js composable unit tests', () => {
     expect(typeof useAuthComposable).toBe('function');
     expect(useAuth).toBe(useAuthComposable);
     expect(useAuthDefault).toBe(useAuthComposable);
+    expect(typeof getAuth).toBe('function');
+    const authFromGet = getAuth();
     const directInstance = useAuth();
     const composableInstance = useAuthComposable();
     expect(directInstance.currentUser).toBe(composableInstance.currentUser);
+    expect(authFromGet.currentUser).toBe(composableInstance.currentUser);
   });
+
 
   it('initializes with null user when localStorage is empty', () => {
     const { currentUser, loadUserFromStorage } = useAuth();
@@ -152,6 +158,82 @@ describe('auth.js composable unit tests', () => {
       globalThis.removeEventListener = originalRemove;
     }
   });
+
+  it('initAuthSync registers listeners and returns cleanup function', () => {
+    const { initAuthSync, currentUser } = useAuth();
+    const cleanup = initAuthSync();
+    expect(typeof cleanup).toBe('function');
+
+    // Test that cleanup unregisters listeners
+    cleanup();
+    currentUser.value = { id: 999, name: 'Still Here' };
+    window.dispatchEvent(new CustomEvent('jt:unauthorized'));
+    expect(currentUser.value).toEqual({ id: 999, name: 'Still Here' });
+  });
+
+  describe('ensureSession()', () => {
+    it('returns null and clears user when no token is in storage', async () => {
+      const { ensureSession, currentUser } = useAuth();
+      currentUser.value = { id: 1, name: 'Old' };
+      const res = await ensureSession();
+      expect(res).toBeNull();
+      expect(currentUser.value).toBeNull();
+    });
+
+    it('verifies session with api.getMe successfully and deduplicates concurrent calls', async () => {
+      const { ensureSession, currentUser } = useAuth();
+      sessionStorage.setItem('jt_token', 'valid-token-abc');
+      const verified = { id: 42, name: 'Verified User', role: 'admin' };
+      const spy = vi.spyOn(api, 'getMe').mockResolvedValue({ success: true, user: verified });
+
+      const [res1, res2] = await Promise.all([ensureSession(), ensureSession()]);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(res1).toEqual(verified);
+      expect(res2).toEqual(verified);
+      expect(currentUser.value).toEqual(verified);
+      spy.mockRestore();
+    });
+
+    it('supports res.data fallback when user field is not provided', async () => {
+      const { ensureSession, currentUser } = useAuth();
+      sessionStorage.setItem('jt_token', 'valid-token-def');
+      const verified = { id: 43, name: 'Data User', role: 'partner' };
+      const spy = vi.spyOn(api, 'getMe').mockResolvedValue({ success: true, data: verified });
+
+      const res = await ensureSession();
+      expect(res).toEqual(verified);
+      expect(currentUser.value).toEqual(verified);
+      spy.mockRestore();
+    });
+
+    it('clears storage and user when server responds with unsuccessful session', async () => {
+      const { ensureSession, currentUser } = useAuth();
+      sessionStorage.setItem('jt_token', 'invalid-token-xyz');
+      currentUser.value = { id: 44, name: 'Pending' };
+      const spy = vi.spyOn(api, 'getMe').mockResolvedValue({ success: false, message: 'Invalid token' });
+
+      const res = await ensureSession();
+      expect(res).toBeNull();
+      expect(currentUser.value).toBeNull();
+      expect(sessionStorage.getItem('jt_token')).toBeNull();
+      spy.mockRestore();
+    });
+
+    it('falls back to existing currentUser when api.getMe rejects with network error', async () => {
+      const { ensureSession, currentUser } = useAuth();
+      sessionStorage.setItem('jt_token', 'token-offline');
+      const existingUser = { id: 45, name: 'Offline User' };
+      currentUser.value = existingUser;
+      const spy = vi.spyOn(api, 'getMe').mockRejectedValue(new Error('Network Offline'));
+
+      const res = await ensureSession();
+      expect(res).toEqual(existingUser);
+      expect(currentUser.value).toEqual(existingUser);
+      spy.mockRestore();
+    });
+  });
 });
+
 
 
