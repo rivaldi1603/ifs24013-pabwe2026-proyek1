@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
+  extractList,
+  extractDetail,
+  extractError,
   useMetadata,
   useDestinationsCatalog,
   useServicesCatalog,
@@ -13,6 +16,32 @@ import { api } from '../api.js';
 describe('useCatalog composables suite', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe('helper functions (extractList, extractDetail, extractError)', () => {
+    it('extractList safely extracts arrays and handles invalid/empty inputs', () => {
+      expect(extractList({ success: true, data: [1, 2, 3] })).toEqual([1, 2, 3]);
+      expect(extractList({ success: true, data: 'not-an-array' })).toEqual([]);
+      expect(extractList({ success: true, data: null })).toEqual([]);
+      expect(extractList({ success: false, data: [1, 2] })).toEqual([]);
+      expect(extractList(null)).toEqual([]);
+      expect(extractList(undefined)).toEqual([]);
+    });
+
+    it('extractDetail safely extracts data objects and handles missing/falsy inputs', () => {
+      expect(extractDetail({ success: true, data: { id: 10 } })).toEqual({ id: 10 });
+      expect(extractDetail({ success: true, data: null })).toBeNull();
+      expect(extractDetail({ success: false, data: { id: 10 } })).toBeNull();
+      expect(extractDetail(null)).toBeNull();
+      expect(extractDetail(undefined)).toBeNull();
+    });
+
+    it('extractError safely returns server message or fallback', () => {
+      expect(extractError({ message: 'Server error' }, 'Fallback')).toBe('Server error');
+      expect(extractError({ message: '' }, 'Fallback')).toBe('Fallback');
+      expect(extractError(null, 'Fallback')).toBe('Fallback');
+      expect(extractError(undefined, 'Fallback')).toBe('Fallback');
+    });
   });
 
   describe('useMetadata()', () => {

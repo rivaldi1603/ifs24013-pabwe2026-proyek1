@@ -7,6 +7,36 @@ const cachedCategories = shallowRef([]);
 let metadataPromise = null;
 
 /**
+ * Safely extracts an array from standard API response envelope: { success: true, data: [...] }
+ */
+export function extractList(res) {
+  if (res && res.success && Array.isArray(res.data)) {
+    return res.data;
+  }
+  return [];
+}
+
+/**
+ * Safely extracts detail object from API response envelope: { success: true, data: {...} }
+ */
+export function extractDetail(res) {
+  if (res && res.success && res.data) {
+    return res.data;
+  }
+  return null;
+}
+
+/**
+ * Safely extracts error message from API response envelope with a fallback.
+ */
+export function extractError(res, fallback) {
+  if (res && res.message) {
+    return res.message;
+  }
+  return fallback;
+}
+
+/**
  * Metadata Composable
  * Manages regency options, tourism categories, and overall directory statistics.
  */
@@ -31,8 +61,8 @@ export function useMetadata() {
       api.getRegencies(),
       api.getCategories()
     ]).then(([rRes, cRes]) => {
-      if (rRes?.success) cachedRegencies.value = rRes.data || [];
-      if (cRes?.success) cachedCategories.value = cRes.data || [];
+      cachedRegencies.value = extractList(rRes);
+      cachedCategories.value = extractList(cRes);
       return { regencies: cachedRegencies.value, categories: cachedCategories.value };
     }).catch(err => {
       console.error('Failed to load metadata:', err);
@@ -48,12 +78,12 @@ export function useMetadata() {
 
   async function loadStats() {
     loading.value = true;
+    error.value = null;
     try {
       const res = await api.getStats();
-      if (res?.success) {
-        stats.value = res.data;
-      }
-      return res?.data || null;
+      const data = extractDetail(res);
+      stats.value = data;
+      return data;
     } catch (err) {
       console.error('Failed to load directory stats:', err);
       error.value = 'Gagal memuat statistik.';
@@ -90,11 +120,11 @@ export function useDestinationsCatalog() {
     error.value = null;
     try {
       const res = await api.getDestinations(params);
-      if (res?.success) {
-        items.value = res.data || [];
+      if (res && res.success) {
+        items.value = extractList(res);
         return res;
       }
-      error.value = res?.message || 'Gagal memuat destinasi.';
+      error.value = extractError(res, 'Gagal memuat destinasi.');
       return res;
     } catch (err) {
       console.error('Error fetching destinations:', err);
@@ -108,10 +138,8 @@ export function useDestinationsCatalog() {
   async function loadFeatured() {
     try {
       const res = await api.getFeaturedDestinations();
-      if (res?.success) {
-        featured.value = res.data || [];
-      }
-      return res?.data || [];
+      featured.value = extractList(res);
+      return featured.value;
     } catch (err) {
       console.error('Error fetching featured destinations:', err);
       return [];
@@ -123,11 +151,12 @@ export function useDestinationsCatalog() {
     error.value = null;
     try {
       const res = await api.getDestinationDetail(slug);
-      if (res?.success) {
-        item.value = res.data;
-        return res.data;
+      const detail = extractDetail(res);
+      if (detail) {
+        item.value = detail;
+        return detail;
       }
-      error.value = res?.message || 'Destinasi tidak ditemukan.';
+      error.value = extractError(res, 'Destinasi tidak ditemukan.');
       return null;
     } catch (err) {
       console.error('Error fetching destination detail:', err);
@@ -165,11 +194,11 @@ export function useServicesCatalog() {
     error.value = null;
     try {
       const res = await api.getServices(params);
-      if (res?.success) {
-        items.value = res.data || [];
+      if (res && res.success) {
+        items.value = extractList(res);
         return res;
       }
-      error.value = res?.message || 'Gagal memuat jasa lokal.';
+      error.value = extractError(res, 'Gagal memuat jasa lokal.');
       return res;
     } catch (err) {
       console.error('Error fetching services:', err);
@@ -185,11 +214,12 @@ export function useServicesCatalog() {
     error.value = null;
     try {
       const res = await api.getServiceDetail(slug);
-      if (res?.success) {
-        item.value = res.data;
-        return res.data;
+      const detail = extractDetail(res);
+      if (detail) {
+        item.value = detail;
+        return detail;
       }
-      error.value = res?.message || 'Layanan tidak ditemukan.';
+      error.value = extractError(res, 'Layanan tidak ditemukan.');
       return null;
     } catch (err) {
       console.error('Error fetching service detail:', err);
@@ -224,11 +254,11 @@ export function useTransportCatalog() {
     error.value = null;
     try {
       const res = await api.getTransport(type);
-      if (res?.success) {
-        items.value = res.data || [];
-        return res.data;
+      if (res && res.success) {
+        items.value = extractList(res);
+        return items.value;
       }
-      error.value = res?.message || 'Gagal memuat jadwal transportasi.';
+      error.value = extractError(res, 'Gagal memuat jadwal transportasi.');
       return [];
     } catch (err) {
       console.error('Error fetching transport:', err);
@@ -262,11 +292,11 @@ export function useCulinaryCatalog() {
     error.value = null;
     try {
       const res = await api.getRestaurants(params);
-      if (res?.success) {
-        restaurants.value = res.data || [];
+      if (res && res.success) {
+        restaurants.value = extractList(res);
         return res;
       }
-      error.value = res?.message || 'Gagal memuat rumah makan.';
+      error.value = extractError(res, 'Gagal memuat rumah makan.');
       return res;
     } catch (err) {
       console.error('Error fetching restaurants:', err);
@@ -280,10 +310,8 @@ export function useCulinaryCatalog() {
   async function loadCulinaryItems(halal = false) {
     try {
       const res = await api.getCulinary(halal);
-      if (res?.success) {
-        culinaryItems.value = res.data || [];
-      }
-      return res?.data || [];
+      culinaryItems.value = extractList(res);
+      return culinaryItems.value;
     } catch (err) {
       console.error('Error fetching culinary items:', err);
       return [];
@@ -314,11 +342,11 @@ export function useArticlesCatalog() {
     error.value = null;
     try {
       const res = await api.getArticles();
-      if (res?.success) {
-        items.value = res.data || [];
-        return res.data;
+      if (res && res.success) {
+        items.value = extractList(res);
+        return items.value;
       }
-      error.value = res?.message || 'Gagal memuat artikel.';
+      error.value = extractError(res, 'Gagal memuat artikel.');
       return [];
     } catch (err) {
       console.error('Error fetching articles:', err);
@@ -352,10 +380,12 @@ export function useReviews() {
     error.value = null;
     try {
       const res = await api.getReviews({ user_id: userId });
-      if (res?.success) {
-        reviews.value = res.data || [];
+      if (res && res.success) {
+        reviews.value = extractList(res);
         return reviews.value;
       }
+      reviews.value = [];
+      error.value = extractError(res, 'Gagal memuat ulasan.');
       return [];
     } catch (err) {
       console.error('Error loading user reviews:', err);
@@ -371,10 +401,12 @@ export function useReviews() {
     error.value = null;
     try {
       const res = await api.getReviews(targetType, targetId);
-      if (res?.success) {
-        reviews.value = res.data || [];
+      if (res && res.success) {
+        reviews.value = extractList(res);
         return reviews.value;
       }
+      reviews.value = [];
+      error.value = extractError(res, 'Gagal memuat ulasan.');
       return [];
     } catch (err) {
       console.error('Error loading entity reviews:', err);
