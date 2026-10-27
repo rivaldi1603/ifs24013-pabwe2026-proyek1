@@ -45,23 +45,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { api } from '../api';
+import { onMounted } from 'vue';
+import { useArticlesCatalog } from '../composables/useCatalog.js';
 
-const articles = ref([]);
-const loading = ref(true);
+const { items: articles, loading, loadArticles } = useArticlesCatalog();
 
-onMounted(async () => {
-  try {
-    const res = await api.getArticles();
-    if (res.success) {
-      articles.value = res.data;
-    }
-  } catch (err) {
-    console.error('Error fetching articles:', err);
-  } finally {
-    loading.value = false;
-  }
+onMounted(() => {
+  loadArticles();
 });
 </script>
 

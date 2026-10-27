@@ -107,20 +107,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api } from '../api';
+import { useDestinationsCatalog, useMetadata } from '../composables/useCatalog.js';
 import DestinationCard from '../components/DestinationCard.vue';
 
 const route = useRoute();
 const router = useRouter();
 
-const destinations = ref([]);
-const regencies = ref([]);
-const categories = ref([]);
+const { items: destinations, loading, loadDestinations } = useDestinationsCatalog();
+const { regencies, categories: allCategories, loadMetadata } = useMetadata();
+const categories = computed(() => allCategories.value.filter(c => c.type === 'place'));
+
 const total = ref(0);
 const page = ref(1);
 const limit = ref(18);
 const totalPages = ref(1);
-const loading = ref(true);
 
 const search = ref(route.query.search || '');
 const selectedRegency = ref(route.query.regency || '');
@@ -175,42 +175,27 @@ function goToPage(p) {
 }
 
 async function fetchData() {
-  loading.value = true;
-  try {
-    const params = {
-      page: page.value,
-      limit: limit.value
-    };
-    if (search.value.trim()) params.search = search.value.trim();
-    if (selectedRegency.value) params.regency = selectedRegency.value;
-    if (selectedCategory.value) params.category = selectedCategory.value;
-    if (sortBy.value) params.sort = sortBy.value;
-    if (communityOnly.value) params.community_only = '1';
+  const params = {
+    page: page.value,
+    limit: limit.value
+  };
+  if (search.value.trim()) params.search = search.value.trim();
+  if (selectedRegency.value) params.regency = selectedRegency.value;
+  if (selectedCategory.value) params.category = selectedCategory.value;
+  if (sortBy.value) params.sort = sortBy.value;
+  if (communityOnly.value) params.community_only = '1';
 
-    const res = await api.getDestinations(params);
-    if (res.success) {
-      destinations.value = res.data;
-      total.value = res.total;
-      totalPages.value = res.totalPages;
-    }
-  } catch (err) {
-    console.error('Error fetching destinations:', err);
-  } finally {
-    loading.value = false;
+  const res = await loadDestinations(params);
+  if (res?.total !== undefined) {
+    total.value = res.total;
+  }
+  if (res?.totalPages !== undefined) {
+    totalPages.value = res.totalPages;
   }
 }
 
 onMounted(async () => {
-  try {
-    const [regRes, catRes] = await Promise.all([
-      api.getRegencies(),
-      api.getCategories()
-    ]);
-    if (regRes.success) regencies.value = regRes.data;
-    if (catRes.success) categories.value = catRes.data.filter(c => c.type === 'place');
-  } catch (e) {
-    console.error('Failed to load destinations metadata:', e);
-  }
+  await loadMetadata();
   fetchData();
 });
 </script>

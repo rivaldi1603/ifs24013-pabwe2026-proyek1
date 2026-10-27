@@ -27,8 +27,7 @@ export default defineConfig({
       include: [
         'src/utils/**/*.js',
         'src/constants/**/*.js',
-        'src/composables/**/*.js',
-        'src/auth.js'
+        'src/composables/**/*.js'
       ],
       all: true
     }

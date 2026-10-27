@@ -144,10 +144,34 @@ export function useAuth() {
     globalThis.dispatchEvent(new CustomEvent('jt:auth-change'));
   }
 
+  /**
+   * Authenticates user via email and password, saving session on success.
+   */
+  async function login(email, password) {
+    const res = await api.login(email, password);
+    if (res?.success && res.user) {
+      setUser(res.user, res.token);
+    }
+    return res;
+  }
+
+  /**
+   * Registers a new user account, saving session on success.
+   */
+  async function register(payload) {
+    const res = await api.register(payload);
+    if (res?.success && res.user) {
+      setUser(res.user, res.token);
+    }
+    return res;
+  }
+
   return {
     currentUser,
     setUser,
     logoutUser,
+    login,
+    register,
     loadUserFromStorage,
     setupAuthListeners,
     removeAuthListeners,

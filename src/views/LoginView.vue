@@ -131,16 +131,15 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { api } from '../api';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const route = useRoute();
-const { setUser } = useAuth();
+const { login, register } = useAuth();
 
-// Mode is derived from the URL: /auth/register or /auth/regiter -> register, otherwise login
-const isRegister = computed(() => route.path === '/auth/register' || route.path === '/auth/regiter' || route.path === '/register' || route.path === '/regiter');
+// Mode is derived from the URL: /auth/register or /register -> register, otherwise login
+const isRegister = computed(() => route.path === '/auth/register' || route.path === '/register');
 
 const name = ref('');
 const email = ref('');
@@ -193,7 +192,7 @@ function validateRegisterForm() {
 }
 
 async function handleRegisterSubmit(redirectTo) {
-  const res = await api.register({
+  const res = await register({
     name: name.value,
     email: email.value,
     password: password.value,
@@ -206,7 +205,6 @@ async function handleRegisterSubmit(redirectTo) {
     return;
   }
 
-  setUser(res.user, res.token);
   successMsg.value = 'Registrasi berhasil! Mengalihkan...';
   const target = redirectTo || '/dashboard';
   setTimeout(() => {
@@ -215,13 +213,12 @@ async function handleRegisterSubmit(redirectTo) {
 }
 
 async function handleLoginSubmit(redirectTo) {
-  const res = await api.login(email.value, password.value);
+  const res = await login(email.value, password.value);
   if (!res.success) {
     errorMsg.value = res.message || 'Email atau password salah.';
     return;
   }
 
-  setUser(res.user, res.token);
   successMsg.value = 'Login berhasil! Mengalihkan...';
   const target = redirectTo || '/dashboard';
   setTimeout(() => {

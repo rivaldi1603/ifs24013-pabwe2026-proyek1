@@ -196,12 +196,11 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { api } from '../api';
+import { useDestinationsCatalog } from '../composables/useCatalog.js';
 import ReviewModal from '../components/ReviewModal.vue';
 
 const route = useRoute();
-const dest = ref(null);
-const loading = ref(true);
+const { item: dest, loading, loadDestinationDetail } = useDestinationsCatalog();
 const showReviewModal = ref(false);
 
 const defaultImage = 'https://images.unsplash.com/photo-1596401057633-54a8fe8ef647?auto=format&fit=crop&w=800&q=80';
@@ -218,21 +217,8 @@ const whatsappUrl = computed(() => {
 });
 
 async function loadDetail() {
-  loading.value = true;
-  try {
-    const slug = route.params.slug;
-    const res = await api.getDestinationDetail(slug);
-    if (res.success) {
-      dest.value = res.data;
-    } else {
-      dest.value = null;
-    }
-  } catch (err) {
-    console.error('Error loading destination:', err);
-    dest.value = null;
-  } finally {
-    loading.value = false;
-  }
+  const slug = route.params.slug;
+  await loadDestinationDetail(slug);
 }
 
 function onReviewSubmitted(data) {

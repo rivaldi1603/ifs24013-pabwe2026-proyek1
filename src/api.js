@@ -1,17 +1,21 @@
 import { getStoredToken, clearStoredAuth } from './constants/storage.js';
+
+/**
+ * Resolves the API base URL dynamically.
+ * Priority:
+ * 1. VITE_API_BASE_URL environment variable if provided.
+ * 2. Relative '/api' endpoint (supports Vite dev proxy and standard reverse proxies).
+ */
 function resolveApiBaseUrl() {
   const envUrl = import.meta.env?.VITE_API_BASE_URL;
-  let url = typeof envUrl === 'string' && envUrl.trim()
-    ? envUrl.trim()
-    : 'https://ifs24013-pabwe2026-proyek1-be.vercel.app/api';
-
-  if (url.endsWith('/ap')) {
-    url = `${url}i`;
+  if (typeof envUrl === 'string' && envUrl.trim()) {
+    let url = envUrl.trim().replace(/\/+$/, '');
+    if (!url.endsWith('/api')) {
+      url = `${url}/api`;
+    }
+    return url;
   }
-  if (!url.endsWith('/api')) {
-    url = `${url.replace(/\/+$/, '')}/api`;
-  }
-  return url.replace(/\/+$/, '');
+  return '/api';
 }
 
 const BASE_URL = resolveApiBaseUrl();
@@ -44,6 +48,8 @@ if (globalThis.window !== undefined) {
  * Centralized fetch wrapper. Always resolves to an object shaped like
  * { success: boolean, message?: string, ... } and never throws, so callers
  * can safely check `res.success` even on network / non-JSON failures.
+ *
+ * Uses `credentials: 'include'` for HttpOnly cookie support and Bearer auth header fallback.
  */
 async function request(path, { method = 'GET', body, auth = false } = {}) {
   const controller = new AbortController();
@@ -55,6 +61,7 @@ async function request(path, { method = 'GET', body, auth = false } = {}) {
       method,
       headers: getHeaders(auth),
       body: body === undefined ? undefined : JSON.stringify(body),
+      credentials: 'include',
       signal: controller.signal
     });
   } catch (err) {

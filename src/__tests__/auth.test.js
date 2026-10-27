@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import useAuthDefault, { useAuth } from '../auth.js';
-import { useAuth as useAuthComposable } from '../composables/useAuth.js';
+import useAuthDefault, { useAuth } from '../composables/useAuth.js';
 import { api } from '../api.js';
 
 
-describe('auth.js composable unit tests', () => {
+describe('useAuth composable unit tests', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -12,14 +11,13 @@ describe('auth.js composable unit tests', () => {
     logoutUser();
   });
 
-  it('re-exports useAuth from auth.js matching composables/useAuth', () => {
+  it('exports useAuth function and default export matching composable', () => {
     expect(typeof useAuth).toBe('function');
-    expect(typeof useAuthComposable).toBe('function');
-    expect(useAuth).toBe(useAuthComposable);
-    expect(useAuthDefault).toBe(useAuthComposable);
-    const directInstance = useAuth();
-    const composableInstance = useAuthComposable();
-    expect(directInstance.currentUser).toBe(composableInstance.currentUser);
+    expect(typeof useAuthDefault).toBe('function');
+    expect(useAuthDefault).toBe(useAuth);
+    const instanceA = useAuth();
+    const instanceB = useAuthDefault();
+    expect(instanceA.currentUser).toBe(instanceB.currentUser);
   });
 
 
@@ -227,6 +225,71 @@ describe('auth.js composable unit tests', () => {
       const res = await ensureSession();
       expect(res).toEqual(existingUser);
       expect(currentUser.value).toEqual(existingUser);
+      spy.mockRestore();
+    });
+  });
+
+  describe('login() and register() composable methods', () => {
+    it('login sets user and token on success', async () => {
+      const { login, currentUser } = useAuth();
+      const mockUser = { id: 10, name: 'Login User', role: 'admin' };
+      const spy = vi.spyOn(api, 'login').mockResolvedValue({
+        success: true,
+        user: mockUser,
+        token: 'token-login-123'
+      });
+
+      const res = await login('login@example.com', 'password123');
+      expect(spy).toHaveBeenCalledWith('login@example.com', 'password123');
+      expect(res.success).toBe(true);
+      expect(currentUser.value).toEqual(mockUser);
+      expect(sessionStorage.getItem('jt_token')).toBe('token-login-123');
+      spy.mockRestore();
+    });
+
+    it('login returns failure without updating user on error response', async () => {
+      const { login, currentUser, logoutUser } = useAuth();
+      logoutUser();
+      const spy = vi.spyOn(api, 'login').mockResolvedValue({
+        success: false,
+        message: 'Invalid credentials'
+      });
+
+      const res = await login('bad@example.com', 'wrong');
+      expect(res.success).toBe(false);
+      expect(currentUser.value).toBeNull();
+      spy.mockRestore();
+    });
+
+    it('register sets user and token on success', async () => {
+      const { register, currentUser } = useAuth();
+      const mockUser = { id: 11, name: 'New Registered User', role: 'user' };
+      const spy = vi.spyOn(api, 'register').mockResolvedValue({
+        success: true,
+        user: mockUser,
+        token: 'token-reg-456'
+      });
+
+      const payload = { name: 'New Registered User', email: 'reg@example.com', password: 'password123' };
+      const res = await register(payload);
+      expect(spy).toHaveBeenCalledWith(payload);
+      expect(res.success).toBe(true);
+      expect(currentUser.value).toEqual(mockUser);
+      expect(sessionStorage.getItem('jt_token')).toBe('token-reg-456');
+      spy.mockRestore();
+    });
+
+    it('register returns failure without updating user on error response', async () => {
+      const { register, currentUser, logoutUser } = useAuth();
+      logoutUser();
+      const spy = vi.spyOn(api, 'register').mockResolvedValue({
+        success: false,
+        message: 'Email already registered'
+      });
+
+      const res = await register({ email: 'duplicate@example.com' });
+      expect(res.success).toBe(false);
+      expect(currentUser.value).toBeNull();
       spy.mockRestore();
     });
   });

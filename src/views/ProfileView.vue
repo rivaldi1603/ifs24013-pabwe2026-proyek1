@@ -85,9 +85,9 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted } from 'vue';
-import { api } from '../api.js';
+import { ref, computed, onMounted } from 'vue';
 import { useProfileEdit } from '../composables/useProfileEdit.js';
+import { useReviews, useDestinationsCatalog } from '../composables/useCatalog.js';
 import ProfileHeader from '../components/profile/ProfileHeader.vue';
 import ProfileStats from '../components/profile/ProfileStats.vue';
 import ProfileReviewsTab from '../components/profile/ProfileReviewsTab.vue';
@@ -104,9 +104,8 @@ const {
 } = useProfileEdit();
 
 const currentTab = ref('reviews');
-const myReviews = shallowRef([]);
-const featuredDestinations = shallowRef([]);
-const loading = ref(true);
+const { reviews: myReviews, loading, loadUserReviews } = useReviews();
+const { featured: featuredDestinations, loadFeatured } = useDestinationsCatalog();
 
 const averageGivenRating = computed(() => {
   if (myReviews.value.length === 0) return '0.0';
@@ -116,30 +115,13 @@ const averageGivenRating = computed(() => {
 
 async function loadUserData() {
   if (!user.value) return;
-  loading.value = true;
-  try {
-    const revRes = await api.getReviews({ user_id: user.value.id });
-    if (revRes && revRes.success) {
-      myReviews.value = revRes.data || [];
-    }
-  } catch (err) {
-    console.error('Error loading profile reviews:', err);
-  } finally {
-    loading.value = false;
-  }
+  await loadUserReviews(user.value.id);
 }
 
 async function switchTab(tab) {
   currentTab.value = tab;
   if (tab === 'recommendations' && featuredDestinations.value.length === 0) {
-    try {
-      const featRes = await api.getFeaturedDestinations();
-      if (featRes && featRes.success) {
-        featuredDestinations.value = featRes.data || [];
-      }
-    } catch (err) {
-      console.error('Error loading recommendations:', err);
-    }
+    await loadFeatured();
   }
 }
 

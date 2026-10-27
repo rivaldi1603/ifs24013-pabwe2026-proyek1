@@ -251,7 +251,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { api } from '../api';
+import { useMetadata, useDestinationsCatalog, useServicesCatalog } from '../composables/useCatalog.js';
 import DestinationCard from '../components/DestinationCard.vue';
 import ServiceCard from '../components/ServiceCard.vue';
 
@@ -261,11 +261,10 @@ const searchQuery = ref('');
 const selectedRegency = ref('');
 const selectedCategory = ref('');
 
-const regencies = ref([]);
-const categories = ref([]);
-const stats = ref({});
-const featuredDestinations = ref([]);
-const communityServices = ref([]);
+const { regencies, categories, stats, loadMetadata, loadStats } = useMetadata();
+const { featured: featuredDestinations, loadFeatured } = useDestinationsCatalog();
+const { items: communityServices, loadServices } = useServicesCatalog();
+
 const recentReviews = ref([]);
 const loadingDestinations = ref(true);
 
@@ -279,22 +278,15 @@ function executeSearch() {
 
 onMounted(async () => {
   try {
-    const [regRes, catRes, statRes, featRes, servRes] = await Promise.all([
-      api.getRegencies(),
-      api.getCategories(),
-      api.getStats(),
-      api.getFeaturedDestinations(),
-      api.getServices({ limit: 4, community_only: 1 })
+    const [, statData] = await Promise.all([
+      loadMetadata(),
+      loadStats(),
+      loadFeatured(),
+      loadServices({ limit: 4, community_only: 1 })
     ]);
-
-    if (regRes.success) regencies.value = regRes.data;
-    if (catRes.success) categories.value = catRes.data;
-    if (statRes.success) {
-      stats.value = statRes.data;
-      recentReviews.value = statRes.data.recentReviews || [];
+    if (statData?.recentReviews) {
+      recentReviews.value = statData.recentReviews;
     }
-    if (featRes.success) featuredDestinations.value = featRes.data;
-    if (servRes.success) communityServices.value = servRes.data;
   } catch (err) {
     console.error('Error loading home data:', err);
   } finally {

@@ -39,13 +39,14 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted, defineAsyncComponent, reactive } from 'vue';
-import { api } from '../api.js';
+import { ref, computed, onMounted, defineAsyncComponent, reactive } from 'vue';
 import { useAuth } from '../composables/useAuth.js';
+import { useMetadata } from '../composables/useCatalog.js';
 import { ADMIN_TABS } from '../constants/admin.js';
 import AdminTabBar from '../components/admin/AdminTabBar.vue';
 
 const { currentUser: user } = useAuth();
+const { regencies, categories, loadMetadata } = useMetadata();
 
 const TAB_COMPONENTS = {
   destinations: defineAsyncComponent(() => import('../components/admin/tabs/DestinationsTab.vue')),
@@ -80,25 +81,8 @@ function setTabCount(tabId, count) {
   }
 }
 
-// Master references
-const regencies = shallowRef([]);
-const categories = shallowRef([]);
-
-async function loadInitialMetadata() {
-  try {
-    const [regRes, catRes] = await Promise.all([
-      api.getRegencies(),
-      api.getCategories()
-    ]);
-    if (regRes?.success) regencies.value = regRes.data || [];
-    if (catRes?.success) categories.value = catRes.data || [];
-  } catch (err) {
-    console.error('Error fetching admin metadata:', err);
-  }
-}
-
 onMounted(() => {
-  loadInitialMetadata();
+  loadMetadata();
 });
 </script>
 

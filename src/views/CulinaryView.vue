@@ -115,14 +115,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { api } from '../api';
+import { useCulinaryCatalog, useMetadata } from '../composables/useCatalog.js';
 import { truncateText as truncate } from '../utils/formatters';
 
-const culinaryItems = ref([]);
-const restaurants = ref([]);
-const regencies = ref([]);
+const { restaurants, culinaryItems, loading: loadingResto, loadRestaurants, loadCulinaryItems } = useCulinaryCatalog();
+const { regencies, loadMetadata } = useMetadata();
 const totalRestos = ref(0);
-const loadingResto = ref(true);
 
 const search = ref('');
 const selectedRegency = ref('');
@@ -137,36 +135,22 @@ function debounceSearch() {
 }
 
 async function fetchRestaurants() {
-  loadingResto.value = true;
-  try {
-    const params = { limit: 30 };
-    if (search.value.trim()) params.search = search.value.trim();
-    if (selectedRegency.value) params.regency = selectedRegency.value;
-    if (halalOnly.value) params.halal = '1';
+  const params = { limit: 30 };
+  if (search.value.trim()) params.search = search.value.trim();
+  if (selectedRegency.value) params.regency = selectedRegency.value;
+  if (halalOnly.value) params.halal = '1';
 
-    const res = await api.getRestaurants(params);
-    if (res.success) {
-      restaurants.value = res.data;
-      totalRestos.value = res.total;
-    }
-  } catch (err) {
-    console.error('Error fetching restaurants:', err);
-  } finally {
-    loadingResto.value = false;
+  const res = await loadRestaurants(params);
+  if (res?.total !== undefined) {
+    totalRestos.value = res.total;
   }
 }
 
 onMounted(async () => {
-  try {
-    const [culRes, regRes] = await Promise.all([
-      api.getCulinary(),
-      api.getRegencies()
-    ]);
-    if (culRes.success) culinaryItems.value = culRes.data;
-    if (regRes.success) regencies.value = regRes.data;
-  } catch (err) {
-    console.error('Error loading culinary data:', err);
-  }
+  await Promise.all([
+    loadCulinaryItems(),
+    loadMetadata()
+  ]);
   fetchRestaurants();
 });
 </script>

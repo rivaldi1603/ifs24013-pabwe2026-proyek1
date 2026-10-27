@@ -87,9 +87,8 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { api } from '../api.js';
 import { useAuth } from '../composables/useAuth.js';
+import { useReviews } from '../composables/useCatalog.js';
 import BaseModal from './common/BaseModal.vue';
 
 const props = defineProps({
@@ -110,12 +109,11 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'review-submitted']);
 const { currentUser } = useAuth();
-const route = useRoute();
+const { submitReview, loading: submitting } = useReviews();
 
 const rating = ref(5);
 const reviewerName = ref('');
 const reviewText = ref('');
-const submitting = ref(false);
 const errorMsg = ref('');
 
 // Pre-fill user name if logged in
@@ -138,11 +136,10 @@ async function handleSubmit() {
     return;
   }
 
-  submitting.value = true;
   errorMsg.value = '';
 
   try {
-    const res = await api.submitReview({
+    const res = await submitReview({
       target_type: props.targetType,
       target_id: props.targetId,
       rating: rating.value,
@@ -159,9 +156,7 @@ async function handleSubmit() {
     }
   } catch (err) {
     console.error('Submit review error:', err);
-    errorMsg.value = 'Terjadi kesalahan jaringan.';
-  } finally {
-    submitting.value = false;
+    errorMsg.value = 'Terjadi kesalahan sistem.';
   }
 }
 </script>

@@ -9,14 +9,14 @@ const __dirname = path.dirname(__filename);
 const distDir = path.join(__dirname, 'dist');
 const indexPath = path.join(distDir, 'index.html');
 
-// 1. Automatically build frontend if dist/ does not exist
+// 1. Verify build output exists
 if (!fs.existsSync(indexPath)) {
-  console.log('[SERVER] dist/index.html not found, running build...');
+  console.log('[SERVER] dist/index.html not found. Running npm run build...');
   try {
-    execSync('bun run build || npm run build', { stdio: 'inherit', cwd: __dirname });
+    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    execSync(`${npmCmd} run build`, { stdio: 'inherit', cwd: __dirname });
   } catch (err) {
-    console.error('[SERVER] Build failed:', err);
-    process.exit(1);
+    console.error('[SERVER] Automated build attempt failed. Please run "npm run build" manually:', err.message);
   }
 }
 
@@ -40,15 +40,26 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=UTF-8'
 };
 
-// 3. Create HTTP server with SPA fallback routing
+// 3. Create HTTP server with SPA fallback routing and directory traversal prevention
 const server = http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0];
-  let safePath = path.normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[\/\\])+/, '');
-  if (safePath === '/' || safePath === '\\') {
-    safePath = '/index.html';
+  let decodedPath = '/';
+  try {
+    decodedPath = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('Bad Request');
+    return;
   }
 
-  let filePath = path.join(distDir, safePath);
+  let filePath = path.resolve(distDir, '.' + path.normalize(decodedPath));
+
+  // Security: prevent directory traversal outside distDir
+  if (!filePath.startsWith(distDir)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('Forbidden');
+    return;
+  }
 
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     filePath = path.join(filePath, 'index.html');
@@ -66,7 +77,9 @@ const server = http.createServer((req, res) => {
     const content = fs.readFileSync(filePath);
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable'
+      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY'
     });
     res.end(content);
   } catch {

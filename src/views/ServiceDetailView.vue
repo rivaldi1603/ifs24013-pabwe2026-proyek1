@@ -157,14 +157,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { api } from '../api';
+import { useServicesCatalog } from '../composables/useCatalog.js';
 import ReviewModal from '../components/ReviewModal.vue';
 import { formatServiceType } from '../utils/formatters';
 
 const route = useRoute();
-const srv = ref(null);
-const loading = ref(true);
-const errorMessage = ref('');
+const { item: srv, loading, error: errorMessage, loadServiceDetail } = useServicesCatalog();
 const showReviewModal = ref(false);
 
 const whatsappUrl = computed(() => {
@@ -175,24 +173,8 @@ const whatsappUrl = computed(() => {
 });
 
 async function loadDetail() {
-  loading.value = true;
-  errorMessage.value = '';
-  try {
-    const slug = route.params.slug;
-    const res = await api.getServiceDetail(slug);
-    if (res.success) {
-      srv.value = res.data;
-    } else {
-      srv.value = null;
-      errorMessage.value = res.message || 'Layanan tidak ditemukan.';
-    }
-  } catch (err) {
-    console.error('Error loading service:', err);
-    srv.value = null;
-    errorMessage.value = 'Gagal terhubung ke server backend.';
-  } finally {
-    loading.value = false;
-  }
+  const slug = route.params.slug;
+  await loadServiceDetail(slug);
 }
 
 watch(() => route.params.slug, (newSlug) => {

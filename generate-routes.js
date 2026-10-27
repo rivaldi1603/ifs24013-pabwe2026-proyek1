@@ -49,7 +49,8 @@ const routes = [
   '404'
 ];
 
-const assetFiles = fs.readdirSync(path.join(distDir, 'assets'));
+const assetsDir = path.join(distDir, 'assets');
+const assetFiles = fs.existsSync(assetsDir) ? fs.readdirSync(assetsDir) : [];
 
 const routeChunkMap = {
   'admin': 'AdminView',
@@ -65,17 +66,15 @@ const routeChunkMap = {
   'cerita': 'ArticlesView',
   'auth/login': 'LoginView',
   'auth/register': 'LoginView',
-  'auth/regiter': 'LoginView',
   'login': 'LoginView',
-  'register': 'LoginView',
-  'regiter': 'LoginView'
+  'register': 'LoginView'
 };
 
 for (const route of routes) {
   let routeHtml = html;
   const chunkPrefix = routeChunkMap[route];
 
-  if (chunkPrefix) {
+  if (chunkPrefix && assetFiles.length > 0) {
     const jsChunk = assetFiles.find(f => f.startsWith(`${chunkPrefix}-`) && f.endsWith('.js'));
     const cssChunk = assetFiles.find(f => f.startsWith(`${chunkPrefix}-`) && f.endsWith('.css'));
     const apiChunk = assetFiles.find(f => f.startsWith('api-') && f.endsWith('.js'));
@@ -88,8 +87,11 @@ for (const route of routes) {
       preloadTags += `<link rel="modulepreload" crossorigin href="/assets/${jsChunk}">`;
     }
     if (cssChunk) {
-      const cssContent = fs.readFileSync(path.join(distDir, 'assets', cssChunk), 'utf8');
-      preloadTags += `<style>${cssContent}</style>`;
+      const cssPath = path.join(assetsDir, cssChunk);
+      if (fs.existsSync(cssPath)) {
+        const cssContent = fs.readFileSync(cssPath, 'utf8');
+        preloadTags += `<style>${cssContent}</style>`;
+      }
     }
     routeHtml = routeHtml.replace('</head>', `${preloadTags}</head>`);
   }

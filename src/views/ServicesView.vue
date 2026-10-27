@@ -100,16 +100,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api } from '../api';
+import { useServicesCatalog, useMetadata } from '../composables/useCatalog.js';
 import ServiceCard from '../components/ServiceCard.vue';
 
 const route = useRoute();
 const router = useRouter();
 
-const services = ref([]);
-const regencies = ref([]);
+const { items: services, loading, loadServices } = useServicesCatalog();
+const { regencies, loadMetadata } = useMetadata();
 const total = ref(0);
-const loading = ref(true);
 
 const currentType = ref(route.query.service_type || '');
 const selectedRegency = ref(route.query.regency || '');
@@ -138,33 +137,20 @@ function resetFilter() {
 }
 
 async function fetchServices() {
-  loading.value = true;
-  try {
-    const params = { limit: 50 };
-    if (currentType.value) params.service_type = currentType.value;
-    if (selectedRegency.value) params.regency = selectedRegency.value;
-    if (search.value.trim()) params.search = search.value.trim();
-    if (communityOnly.value) params.community_only = '1';
+  const params = { limit: 50 };
+  if (currentType.value) params.service_type = currentType.value;
+  if (selectedRegency.value) params.regency = selectedRegency.value;
+  if (search.value.trim()) params.search = search.value.trim();
+  if (communityOnly.value) params.community_only = '1';
 
-    const res = await api.getServices(params);
-    if (res.success) {
-      services.value = res.data;
-      total.value = res.total;
-    }
-  } catch (err) {
-    console.error('Error fetching services:', err);
-  } finally {
-    loading.value = false;
+  const res = await loadServices(params);
+  if (res?.total !== undefined) {
+    total.value = res.total;
   }
 }
 
 onMounted(async () => {
-  try {
-    const rRes = await api.getRegencies();
-    if (rRes.success) regencies.value = rRes.data;
-  } catch (e) {
-    console.error('Failed to load regencies in services:', e);
-  }
+  await loadMetadata();
   fetchServices();
 });
 </script>

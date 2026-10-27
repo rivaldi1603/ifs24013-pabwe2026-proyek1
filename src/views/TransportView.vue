@@ -88,12 +88,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { api } from '../api';
+import { useTransportCatalog } from '../composables/useCatalog.js';
 import { TRANSPORT_TYPE_OPTIONS, getTransportMeta, getTransportIcon } from '../constants/transport.js';
 
-const routes = ref([]);
+const { items: routes, loading, loadTransport } = useTransportCatalog();
 const currentTab = ref('all');
-const loading = ref(true);
 
 function getTransportLabel(type) {
   return getTransportMeta(type).label;
@@ -104,17 +103,8 @@ const filteredRoutes = computed(() => {
   return routes.value.filter(r => r.transport_type === currentTab.value);
 });
 
-onMounted(async () => {
-  try {
-    const res = await api.getTransport();
-    if (res.success) {
-      routes.value = res.data;
-    }
-  } catch (err) {
-    console.error('Error fetching transport:', err);
-  } finally {
-    loading.value = false;
-  }
+onMounted(() => {
+  loadTransport();
 });
 </script>
 
