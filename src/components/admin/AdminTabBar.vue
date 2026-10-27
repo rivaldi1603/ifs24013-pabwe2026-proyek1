@@ -64,9 +64,9 @@ defineEmits(['update:modelValue']);
 }
 
 .dash-tab-btn.active {
-  background: var(--primary-color, #0284c7);
-  color: white;
-  border-color: var(--primary-color, #0284c7);
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  background: var(--primary-dark, #0369a1);
+  color: #ffffff;
+  border-color: var(--primary-dark, #0369a1);
+  box-shadow: 0 2px 8px rgba(3, 105, 161, 0.25);
 }
 </style>

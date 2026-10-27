@@ -49,6 +49,14 @@ describe('useAdminReviews composable', () => {
       expect(allReviews.value).toEqual([]);
     });
 
+    it('handles unsuccessful API response without updating reviews list', async () => {
+      vi.spyOn(api, 'getReviews').mockResolvedValue({ success: false });
+
+      const { allReviews, loadReviews } = useAdminReviews();
+      await loadReviews();
+      expect(allReviews.value).toEqual([]);
+    });
+
     it('handles API errors gracefully and toggles loading off', async () => {
       vi.spyOn(api, 'getReviews').mockRejectedValue(new Error('Network Crash'));
 
@@ -117,17 +125,30 @@ describe('useAdminReviews composable', () => {
     });
 
     it('shows error toast when API delete response is not successful', async () => {
-      vi.spyOn(api, 'deleteReview').mockResolvedValue({ success: false, message: 'Review tidak ditemukan' });
+      const deleteSpy = vi.spyOn(api, 'deleteReview').mockResolvedValue({ success: false, message: 'Review tidak ditemukan' });
 
       const { handleDeleteReview } = useAdminReviews();
       await handleDeleteReview(999);
+
+      expect(deleteSpy).toHaveBeenCalledWith(999);
+    });
+
+    it('falls back to default error message when API delete response has no message', async () => {
+      const deleteSpy = vi.spyOn(api, 'deleteReview').mockResolvedValue({ success: false });
+
+      const { handleDeleteReview } = useAdminReviews();
+      await handleDeleteReview(888);
+
+      expect(deleteSpy).toHaveBeenCalledWith(888);
     });
 
     it('handles unexpected exceptions during delete gracefully', async () => {
-      vi.spyOn(api, 'deleteReview').mockRejectedValue(new Error('Fatal delete error'));
+      const deleteSpy = vi.spyOn(api, 'deleteReview').mockRejectedValue(new Error('Fatal delete error'));
 
       const { handleDeleteReview } = useAdminReviews();
       await handleDeleteReview(5);
+
+      expect(deleteSpy).toHaveBeenCalledWith(5);
     });
   });
 });

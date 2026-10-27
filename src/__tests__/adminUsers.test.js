@@ -40,6 +40,14 @@ describe('useAdminUsers composable', () => {
       expect(usersList.value).toEqual([]);
     });
 
+    it('handles unsuccessful API response without updating users list', async () => {
+      vi.spyOn(api, 'getUsers').mockResolvedValue({ success: false });
+
+      const { usersList, loadUsers } = useAdminUsers();
+      await loadUsers();
+      expect(usersList.value).toEqual([]);
+    });
+
     it('handles network error and finishes loading', async () => {
       vi.spyOn(api, 'getUsers').mockRejectedValue(new Error('Failed to fetch'));
 

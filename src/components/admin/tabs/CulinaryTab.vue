@@ -91,7 +91,7 @@ onMounted(async () => {
 }
 .badge-halal {
   background: rgba(16, 185, 129, 0.12);
-  color: #047857;
+  color: #064e3b;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-full, 9999px);
@@ -99,7 +99,7 @@ onMounted(async () => {
 }
 .badge-non-halal {
   background: rgba(239, 68, 68, 0.12);
-  color: #b91c1c;
+  color: #7f1d1d;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-full, 9999px);
