@@ -29,9 +29,9 @@ export function useAdminReviews() {
     const q = searchQuery.value.trim().toLowerCase();
     if (!q) return allReviews.value;
     return allReviews.value.filter(r =>
-      (r.reviewer_name && r.reviewer_name.toLowerCase().includes(q)) ||
-      (r.review_text && r.review_text.toLowerCase().includes(q)) ||
-      (r.target_name && r.target_name.toLowerCase().includes(q))
+      r.reviewer_name?.toLowerCase().includes(q) ||
+      r.review_text?.toLowerCase().includes(q) ||
+      r.target_name?.toLowerCase().includes(q)
     );
   });
 

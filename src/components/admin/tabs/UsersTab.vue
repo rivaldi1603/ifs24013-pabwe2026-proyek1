@@ -94,7 +94,7 @@ onMounted(async () => {
   overflow: hidden;
 }
 .badge-role-admin {
-  background: rgba(3, 105, 161, 0.12);
+  background-color: #f0f9ff;
   color: #0c4a6e;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
@@ -102,7 +102,7 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 .badge-role-partner {
-  background: rgba(16, 185, 129, 0.12);
+  background-color: #ecfdf5;
   color: #064e3b;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
@@ -110,8 +110,8 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 .badge-role-user {
-  background: rgba(100, 116, 139, 0.12);
-  color: #1e293b;
+  background-color: #f1f5f9;
+  color: #0f172a;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
   border-radius: var(--radius-full, 9999px);

@@ -106,7 +106,7 @@ onMounted(async () => {
   margin-top: 0.2rem;
 }
 .badge-service {
-  background: rgba(14, 165, 233, 0.12);
+  background-color: #f0f9ff;
   color: #0c4a6e;
   font-weight: 700;
   padding: 0.2rem 0.55rem;

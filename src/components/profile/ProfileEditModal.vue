@@ -270,7 +270,7 @@ function handleSubmit() {
 
 .alert-error {
   background-color: #fef2f2;
-  color: #dc2626;
+  color: #991b1b;
   border: 1px solid #fecaca;
   padding: 0.75rem;
   border-radius: 8px;

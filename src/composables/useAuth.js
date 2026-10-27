@@ -93,7 +93,7 @@ export function ensureSession() {
 
   sessionPromise = api.getMe()
     .then((res) => {
-      if (res && res.success && (res.user || res.data)) {
+      if (res?.success && (res.user || res.data)) {
         const verifiedUser = res.user || res.data;
         currentUser.value = verifiedUser;
         setStoredUser(verifiedUser, false);

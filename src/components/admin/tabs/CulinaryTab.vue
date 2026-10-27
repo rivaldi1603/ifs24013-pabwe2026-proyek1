@@ -90,7 +90,7 @@ onMounted(async () => {
   overflow: hidden;
 }
 .badge-halal {
-  background: rgba(16, 185, 129, 0.12);
+  background-color: #ecfdf5;
   color: #064e3b;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
@@ -98,7 +98,7 @@ onMounted(async () => {
   font-size: 0.75rem;
 }
 .badge-non-halal {
-  background: rgba(239, 68, 68, 0.12);
+  background-color: #fef2f2;
   color: #7f1d1d;
   font-weight: 700;
   padding: 0.2rem 0.55rem;

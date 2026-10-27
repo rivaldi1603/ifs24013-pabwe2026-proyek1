@@ -27,9 +27,9 @@ export function useAdminUsers() {
     const q = searchQuery.value.trim().toLowerCase();
     if (!q) return usersList.value;
     return usersList.value.filter(u =>
-      (u.name && u.name.toLowerCase().includes(q)) ||
-      (u.email && u.email.toLowerCase().includes(q)) ||
-      (u.organization && u.organization.toLowerCase().includes(q))
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.organization?.toLowerCase().includes(q)
     );
   });
 

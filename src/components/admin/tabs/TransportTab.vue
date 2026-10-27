@@ -91,15 +91,15 @@ onMounted(async () => {
   margin-top: 0.2rem;
 }
 .badge-role-admin {
-  background: rgba(3, 105, 161, 0.12);
+  background-color: #f0f9ff;
   color: #0c4a6e;
 }
 .badge-role-partner {
-  background: rgba(16, 185, 129, 0.12);
+  background-color: #ecfdf5;
   color: #064e3b;
 }
 .badge-role-user {
-  background: rgba(100, 116, 139, 0.12);
-  color: #1e293b;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 </style>
